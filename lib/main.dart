@@ -1,4 +1,5 @@
-import 'package:donate/VIEW/SCREENS/DONOR/sender_view.dart';
+import 'package:donate/VIEW/SCREENS/DONOR/HOME/donor_view.dart';
+import 'package:donate/VIEW/SCREENS/DONOR/donor_tabbar_view.dart';
 import 'package:donate/VIEWMODEL/SCREENS/SENDER/donor_viewmodel.dart';
 
 import 'package:donate/theme.dart';
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => Donorviewmodel())],
+      providers: [ChangeNotifierProvider(create: (_) => DonorViewModel())],
       child: ScreenUtilInit(
         designSize: const Size(375, 812), // your design reference
         minTextAdapt: true, // ✅ prevents LateInitializationError
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: ThemeMode.system, // aut
-            home: const SenderView(),
+            home: const DonorTabBarView(),
           );
         },
       ),

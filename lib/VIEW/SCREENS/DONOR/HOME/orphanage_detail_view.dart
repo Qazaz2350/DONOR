@@ -3,7 +3,7 @@
 import 'package:donate/MODELS/SCREENS/DONOR/orphanage_model.dart';
 import 'package:donate/Utilis/extention.dart';
 import 'package:donate/Utilis/nav.dart';
-import 'package:donate/VIEW/SCREENS/DONOR/donation_page_view.dart';
+import 'package:donate/VIEW/SCREENS/DONOR/HOME/donation_page_view.dart';
 import 'package:donate/VIEWMODEL/SCREENS/SENDER/donor_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -20,7 +20,7 @@ class OrphanageDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final vm = OrphanageDetailViewModel(orphanage);
+    final vm = DonorViewModel();
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -108,10 +108,7 @@ class OrphanageDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderSection(
-    BuildContext context,
-    OrphanageDetailViewModel vm,
-  ) {
+  Widget _buildHeaderSection(BuildContext context, DonorViewModel vm) {
     return Container(
       margin: EdgeInsets.all(20.w),
       padding: EdgeInsets.all(20.w),
@@ -301,7 +298,7 @@ class OrphanageDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildNeedsSection(BuildContext context, OrphanageDetailViewModel vm) {
+  Widget _buildNeedsSection(BuildContext context, DonorViewModel vm) {
     return Container(
       margin: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 0),
       child: Column(
@@ -362,10 +359,7 @@ class OrphanageDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildDonationStockSection(
-    BuildContext context,
-    OrphanageDetailViewModel vm,
-  ) {
+  Widget _buildDonationStockSection(BuildContext context, DonorViewModel vm) {
     return Container(
       margin: EdgeInsets.all(20.w),
       padding: EdgeInsets.all(20.w),
@@ -819,10 +813,7 @@ class OrphanageDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildDonationHistorySection(
-    BuildContext context,
-    OrphanageDetailViewModel vm,
-  ) {
+  Widget _buildDonationHistorySection(BuildContext context, DonorViewModel vm) {
     return Container(
       margin: EdgeInsets.only(top: 20.h),
       child: Column(

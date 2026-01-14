@@ -1,17 +1,11 @@
+import 'package:donate/MODELS/SCREENS/DONOR/MYDONATION_model.dart';
 import 'package:flutter/material.dart';
-import 'package:donate/MODELS/SCREENS/DONOR/orphanage_model.dart';
 import 'package:donate/UTILIS/app_colors.dart';
 
-class Donorviewmodel extends ChangeNotifier {
+class DonorViewModel extends ChangeNotifier {
   /// ---------------------------
   /// EXISTING (DO NOT TOUCH)
   /// ---------------------------
-  bool isWelcomeExpanded = false;
-
-  void toggleWelcome() {
-    isWelcomeExpanded = !isWelcomeExpanded;
-    notifyListeners();
-  }
 
   String getGreeting() {
     final hour = DateTime.now().hour;
@@ -30,19 +24,16 @@ class Donorviewmodel extends ChangeNotifier {
   final TextEditingController quantityController = TextEditingController();
   final TextEditingController notesController = TextEditingController();
 
-  /// Change donation category
   void setCategory(String value) {
     selectedCategory = value;
     notifyListeners();
   }
 
-  /// Toggle recurring donation
   void toggleRecurring(bool value) {
     isRecurring = value;
     notifyListeners();
   }
 
-  /// Category icons
   IconData getCategoryIcon(String category) {
     final icons = {
       'Money': Icons.attach_money_rounded,
@@ -54,7 +45,6 @@ class Donorviewmodel extends ChangeNotifier {
     return icons[category] ?? Icons.volunteer_activism;
   }
 
-  /// Validation
   bool isAmountValid() {
     final amount = double.tryParse(amountController.text) ?? 0;
     return amount > 0;
@@ -62,24 +52,9 @@ class Donorviewmodel extends ChangeNotifier {
 
   double get amount => double.tryParse(amountController.text) ?? 0;
 
-  @override
-  void dispose() {
-    amountController.dispose();
-    quantityController.dispose();
-    notesController.dispose();
-    super.dispose();
-  }
-}
-
-/// ---------------------------
-/// ORPHANAGE DETAIL VIEWMODEL
-/// ---------------------------
-class OrphanageDetailViewModel {
-  final OrphanageModel orphanage;
-
-  OrphanageDetailViewModel(this.orphanage);
-
-  /// Get icon for a need
+  /// ---------------------------
+  /// ORPHANAGE DETAIL LOGIC
+  /// ---------------------------
   IconData getNeedIcon(String need) {
     switch (need.toLowerCase()) {
       case 'food':
@@ -97,7 +72,6 @@ class OrphanageDetailViewModel {
     }
   }
 
-  /// Get icon for a donation type
   IconData getDonationIcon(String type) {
     switch (type.toLowerCase()) {
       case 'money':
@@ -115,7 +89,6 @@ class OrphanageDetailViewModel {
     }
   }
 
-  /// Get color for a donation type
   Color getDonationColor(String type) {
     switch (type.toLowerCase()) {
       case 'money':
@@ -132,4 +105,51 @@ class OrphanageDetailViewModel {
         return AppColors.primary;
     }
   }
+
+  /// ---------------------------
+  /// DONATION HISTORY LOGIC MERGED
+  /// ---------------------------
+  final List<Donation> donationHistory = [
+    Donation(
+      type: "Money",
+      orphanageName: "Sunshine Orphanage",
+      amount: 1000,
+      status: "Delivered",
+      date: DateTime.now().subtract(Duration(days: 5)),
+    ),
+    Donation(
+      type: "Books",
+      orphanageName: "Hope Orphanage",
+      status: "Shipped",
+      date: DateTime.now().subtract(Duration(days: 2)),
+    ),
+    Donation(
+      type: "Food",
+      orphanageName: "Bright Future Orphanage",
+      status: "Pending",
+      date: DateTime.now(),
+    ),
+    Donation(
+      type: "Toys",
+      orphanageName: "Happy Kids Orphanage",
+      status: "Delivered",
+      date: DateTime.now().subtract(Duration(days: 1)),
+    ),
+  ];
+
+  List<Donation> filterDonationsByStatus(String status) {
+    return donationHistory.where((d) => d.status == status).toList();
+  }
+
+  @override
+  void dispose() {
+    amountController.dispose();
+    quantityController.dispose();
+    notesController.dispose();
+    super.dispose();
+  }
 }
+
+/// ---------------------------
+/// DONATION MODEL
+/// ---------------------------
