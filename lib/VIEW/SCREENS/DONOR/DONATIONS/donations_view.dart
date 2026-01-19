@@ -52,54 +52,27 @@ class _DonationHistoryPageState extends State<DonationHistoryPage> {
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
-        title: Text(
-          "Donation History",
-          style: TextStyle(
-            fontSize: FontSizes.f20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        backgroundColor: context.colors.surface,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(
-              _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
-              color: context.colors.onSurface,
+
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 16.0,
             ),
-            onPressed: () {
-              setState(() {
-                _sortAscending = !_sortAscending;
-              });
-            },
-            tooltip: _sortAscending ? "Sort Z-A" : "Sort A-Z",
-          ),
-        ],
-      ),
-      body: donations.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.history,
-                    size: 80.sp,
-                    color: context.colors.onSurface.withOpacity(0.3),
-                  ),
-                  SizedBox(height: 16.h),
-                  Text(
-                    "No donations yet.",
-                    style: TextStyle(
-                      fontSize: FontSizes.f16,
-                      color: context.colors.onSurface.withOpacity(0.6),
-                    ),
-                  ),
-                ],
+            child: Text(
+              " History",
+              style: TextStyle(
+                color: context.colors.onSurface,
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w700,
               ),
-            )
-          : ListView.builder(
-              padding: EdgeInsets.all(16.w),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
               itemCount: donations.length,
               itemBuilder: (context, index) {
                 final donation = donations[index];
@@ -235,6 +208,9 @@ class _DonationHistoryPageState extends State<DonationHistoryPage> {
                 );
               },
             ),
+          ),
+        ],
+      ),
     );
   }
 }

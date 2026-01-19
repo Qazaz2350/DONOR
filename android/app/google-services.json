@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "53172560409",
+    "project_id": "donor-f9d04",
+    "storage_bucket": "donor-f9d04.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:53172560409:android:8f6c7bcf32a832fe118088",
+        "android_client_info": {
+          "package_name": "com.example.donate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDyFL1_V09Qx0wqpcbX160jEOUEjILwu0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

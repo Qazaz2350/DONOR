@@ -310,3 +310,40 @@ final List<OrphanageModel> dummyOrphanages = [
     contactPhone: '+92 300 1234567',
   ),
 ];
+
+// WISH MODEL
+class WishModel {
+  final String id;
+  final String childName;
+  final String wishDescription;
+  final bool isFulfilled;
+  final DateTime createdAt;
+
+  WishModel({
+    required this.id,
+    required this.childName,
+    required this.wishDescription,
+    required this.isFulfilled,
+    required this.createdAt,
+  });
+
+  // Factory to create from Firestore or JSON
+  factory WishModel.fromMap(Map<String, dynamic> map, String id) {
+    return WishModel(
+      id: id,
+      childName: map['childName'] ?? '',
+      wishDescription: map['wishDescription'] ?? '',
+      isFulfilled: map['isFulfilled'] ?? false,
+      createdAt: map['createdAt']?.toDate() ?? DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'childName': childName,
+      'wishDescription': wishDescription,
+      'isFulfilled': isFulfilled,
+      'createdAt': createdAt,
+    };
+  }
+}

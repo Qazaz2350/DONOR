@@ -13,3 +13,21 @@ class Donation {
     required this.date,
   });
 }
+
+// WISH WALL MODEL
+
+class WishModel {
+  final String id;
+  final String childName;
+  final String wishTitle;
+  final String description;
+  final bool isFulfilled;
+
+  WishModel({
+    required this.id,
+    required this.childName,
+    required this.wishTitle,
+    required this.description,
+    required this.isFulfilled,
+  });
+}

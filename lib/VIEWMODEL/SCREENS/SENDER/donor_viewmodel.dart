@@ -3,6 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:donate/UTILIS/app_colors.dart';
 
 class DonorViewModel extends ChangeNotifier {
+  // status donation
+  bool isWelcomeExpanded = false;
+  void toggleWelcome() {
+    isWelcomeExpanded = !isWelcomeExpanded;
+    notifyListeners();
+  }
+
   /// ---------------------------
   /// EXISTING (DO NOT TOUCH)
   /// ---------------------------
@@ -141,6 +148,57 @@ class DonorViewModel extends ChangeNotifier {
     return donationHistory.where((d) => d.status == status).toList();
   }
 
+  /// ---------------------------
+  /// DONOR STATS SECTION
+  /// ---------------------------
+  double _totalDonations = 1250.0;
+  int _donationCount = 12;
+  int _childrenSponsored = 3;
+
+  // Getters
+  double get totalDonations => _totalDonations;
+  int get donationCount => _donationCount;
+  int get childrenSponsored => _childrenSponsored;
+
+  // Formatted getters for UI
+  String get formattedTotalDonations {
+    if (_totalDonations >= 1000) {
+      return '\$${(_totalDonations / 1000).toStringAsFixed(1)}k';
+    }
+    return '\$${_totalDonations.toStringAsFixed(0)}';
+  }
+
+  String get donationCountText => '$_donationCount Donations';
+  String get childrenSponsoredText => '$_childrenSponsored Children';
+
+  // Update methods
+  void updateTotalDonations(double amount) {
+    _totalDonations = amount;
+    notifyListeners();
+  }
+
+  void incrementDonationCount() {
+    _donationCount++;
+    notifyListeners();
+  }
+
+  void updateChildrenSponsored(int count) {
+    _childrenSponsored = count;
+    notifyListeners();
+  }
+
+  // Fetch stats from API (placeholder)
+  Future<void> fetchDonorStats() async {
+    // TODO: Replace with real API call
+    await Future.delayed(const Duration(seconds: 1));
+
+    _totalDonations = 1250.0;
+    _donationCount = 12;
+    _childrenSponsored = 3;
+
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     amountController.dispose();
@@ -149,7 +207,3 @@ class DonorViewModel extends ChangeNotifier {
     super.dispose();
   }
 }
-
-/// ---------------------------
-/// DONATION MODEL
-/// ---------------------------
