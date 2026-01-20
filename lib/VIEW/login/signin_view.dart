@@ -101,47 +101,47 @@ class SignInScreenView extends StatelessWidget {
                           toggleVisibility: vm.togglePasswordVisibility,
                         ),
                       ),
-                      SizedBox(height: 16.h),
+                      // SizedBox(height: 16.h),
 
                       // Dropdown for user type
-                      DropdownButtonFormField<String>(
-                        value: vm.userType,
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'donor',
-                            child: Text('Donor'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'orphanage',
-                            child: Text('Orphanage'),
-                          ),
-                        ],
-                        decoration: InputDecoration(
-                          hintText: 'Select Account Type',
-                          hintStyle: context.text.bodyMedium?.copyWith(
-                            color: context.colors.onSurface.withOpacity(0.5),
-                            fontSize: FontSizes.f14,
-                          ),
-                          filled: true,
-                          fillColor: context.colors.surface,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 20.w,
-                            vertical: 13.h,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          vm.setUserType(value!);
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select account type';
-                          }
-                          return null;
-                        },
-                      ),
+                      // DropdownButtonFormField<String>(
+                      //   value: vm.userType,
+                      //   items: const [
+                      //     DropdownMenuItem(
+                      //       value: 'donor',
+                      //       child: Text('Donor'),
+                      //     ),
+                      //     DropdownMenuItem(
+                      //       value: 'orphanage',
+                      //       child: Text('Orphanage'),
+                      //     ),
+                      //   ],
+                      //   decoration: InputDecoration(
+                      //     hintText: 'Select Account Type',
+                      //     hintStyle: context.text.bodyMedium?.copyWith(
+                      //       color: context.colors.onSurface.withOpacity(0.5),
+                      //       fontSize: FontSizes.f14,
+                      //     ),
+                      //     filled: true,
+                      //     fillColor: context.colors.surface,
+                      //     border: OutlineInputBorder(
+                      //       borderRadius: BorderRadius.circular(12.r),
+                      //     ),
+                      //     contentPadding: EdgeInsets.symmetric(
+                      //       horizontal: 20.w,
+                      //       vertical: 13.h,
+                      //     ),
+                      //   ),
+                      //   onChanged: (value) {
+                      //     vm.setUserType(value!);
+                      //   },
+                      //   validator: (value) {
+                      //     if (value == null || value.isEmpty) {
+                      //       return 'Please select account type';
+                      //     }
+                      //     return null;
+                      //   },
+                      // ),
                       SizedBox(height: 24.h),
 
                       // Sign In Button

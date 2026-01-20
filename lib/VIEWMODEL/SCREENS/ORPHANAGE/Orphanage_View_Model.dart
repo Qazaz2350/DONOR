@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donate/SERVICES/orphanage_firebase_service.dart';
+import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_waiting_view.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:donate/Utilis/nav.dart';
@@ -11,6 +15,13 @@ class OrphanageViewModel extends ChangeNotifier {
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
   final addressController = TextEditingController();
+  // Controllers for text fields
+  final TextEditingController cnicController = TextEditingController();
+
+  // Image holders
+  File? cnicImage;
+  File? signboardImage;
+  File? orphanageImage;
 
   // ===== Needs (existing) =====
   Map<String, bool> needs = {
@@ -76,10 +87,10 @@ class OrphanageViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ===== Submit Orphanage Profile =====
   Future<void> submitOrphanage(BuildContext context) async {
-    bool isVerified = false;
+    // bool isVerified = false;
     final currentUid = uid;
+
     if (currentUid == null) {
       ScaffoldMessenger.of(
         context,
@@ -87,16 +98,34 @@ class OrphanageViewModel extends ChangeNotifier {
       return;
     }
 
+    // ===== Validate basic fields =====
     if (nameController.text.trim().isEmpty ||
         emailController.text.trim().isEmpty ||
         phoneController.text.trim().isEmpty ||
-        addressController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+        addressController.text.trim().isEmpty ||
+        cnicController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields including CNIC')),
+      );
       return;
     }
 
+    // Optional: CNIC format validation (uncomment if needed)
+    // final cnicPattern = RegExp(r'^\d{5}-\d{7}-\d$');
+    // if (!cnicPattern.hasMatch(cnicController.text.trim())) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('CNIC format is invalid')),
+    //   );
+    //   return;
+    // }
+
+    // ===== Use already-picked images from ViewModel =====
+    // These should be set when the user taps the "Upload Image" buttons
+    final cnicImageFile = cnicImage;
+    final signboardImageFile = signboardImage;
+    final orphanageImageFile = orphanageImage;
+
+    // ===== Collect selected needs =====
     List<String> selectedNeeds = needs.entries
         .where((e) => e.value)
         .map((e) => e.key)
@@ -109,6 +138,10 @@ class OrphanageViewModel extends ChangeNotifier {
         email: emailController.text.trim(),
         phone: phoneController.text.trim(),
         address: addressController.text.trim(),
+        cnic: cnicController.text.trim(),
+        cnicImage: cnicImageFile, // May be null
+        signboardImage: signboardImageFile, // May be null
+        orphanageImage: orphanageImageFile, // May be null
         needs: selectedNeeds,
       );
 
@@ -117,7 +150,10 @@ class OrphanageViewModel extends ChangeNotifier {
           content: Text('Orphanage profile submitted for verification'),
         ),
       );
-      // Nav.push(context, OrphanageDashboardView());
+
+      // Navigate to verification view
+      Nav.push(context, OrphanagWaitingView());
+
       isVerified = true;
     } catch (e) {
       ScaffoldMessenger.of(

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donate/Utilis/nav.dart';
+import 'package:donate/VIEW/SCREENS/ADMIN/admin_dashboard.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/donor_tabbar_view.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_Form_view.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_dashboard_view.dart';
@@ -74,19 +75,28 @@ class AuthViewModel extends ChangeNotifier {
           .createUserWithEmailAndPassword(email: email, password: password);
 
       final uid = userCredential.user?.uid;
-
       if (uid == null) throw Exception('User ID is null');
 
       // 2️⃣ Create document in Firestore based on userType
       final collectionName = _userType == 'donor' ? 'donor' : 'orphanage';
 
-      await FirebaseFirestore.instance.collection(collectionName).doc(uid).set({
+      Map<String, dynamic> userData = {
         'fullName': fullName,
         'email': email,
         'phone': phone,
         'userType': _userType,
         'createdAt': FieldValue.serverTimestamp(),
-      });
+      };
+
+      // 🔹 If orphanage, add verified: false
+      if (_userType == 'orphanage') {
+        userData['verified'] = false;
+      }
+
+      await FirebaseFirestore.instance
+          .collection(collectionName)
+          .doc(uid)
+          .set(userData);
 
       // 3️⃣ Success
       ScaffoldMessenger.of(context).showSnackBar(
@@ -94,15 +104,10 @@ class AuthViewModel extends ChangeNotifier {
       );
 
       Nav.push(context, SignInScreenView());
-      // TODO: Navigate to SignIn or Home
-      // Nav.push(context, SignInScreenView());
     } on FirebaseAuthException catch (e) {
       String message = 'Something went wrong';
-      if (e.code == 'email-already-in-use') {
-        message = 'Email already in use';
-      } else if (e.code == 'weak-password') {
-        message = 'Password is too weak';
-      }
+      if (e.code == 'email-already-in-use') message = 'Email already in use';
+      if (e.code == 'weak-password') message = 'Password is too weak';
 
       ScaffoldMessenger.of(
         context,
@@ -116,10 +121,32 @@ class AuthViewModel extends ChangeNotifier {
 
   // ================= SIGNIN FUNCTION =================
   Future<void> signIn(BuildContext context) async {
-    if (!validateForm()) return;
-
     final email = emailController.text.trim();
     final password = passwordController.text;
+
+    // 🔴 ADMIN CHECK FIRST
+    if (email == "admin6677@gmail.com") {
+      try {
+        // Firebase auth login for admin
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        Nav.push(context, const AdminOrphanagePage());
+      } on FirebaseAuthException catch (e) {
+        String message = 'Something went wrong';
+        if (e.code == 'user-not-found') message = 'No admin found';
+        if (e.code == 'wrong-password') message = 'Incorrect password';
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+      return; // ⚡ skip all other validation
+    }
+
+    // ✅ For Donor / Orphanage
+    if (!validateForm()) return;
 
     try {
       UserCredential userCredential = await FirebaseAuth.instance
@@ -128,45 +155,31 @@ class AuthViewModel extends ChangeNotifier {
       final uid = userCredential.user?.uid;
       if (uid == null) throw Exception('User ID is null');
 
-      // Detect user type
-      String? userType;
+      // Donor check
       final donorDoc = await FirebaseFirestore.instance
           .collection('donor')
           .doc(uid)
           .get();
       if (donorDoc.exists) {
-        userType = 'donor';
-      } else {
-        final orphanageDoc = await FirebaseFirestore.instance
-            .collection('orphanage')
-            .doc(uid)
-            .get();
-        if (orphanageDoc.exists) {
-          userType = 'orphanage';
-        }
-      }
-
-      if (userType == null) throw Exception('User type not found');
-
-      // Success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Logged in successfully as $userType')),
-      );
-
-      // Navigate based on detected type
-      if (userType == 'donor') {
         Nav.push(context, const DonorTabBarView());
-      } else if (userType == 'orphanage') {
-        Nav.push(context, OrphanageDashboardView());
+        return;
       }
+
+      // Orphanage check
+      final orphanageDoc = await FirebaseFirestore.instance
+          .collection('orphanage')
+          .doc(uid)
+          .get();
+      if (orphanageDoc.exists) {
+        Nav.push(context, OrphanageDashboardView());
+        return;
+      }
+
+      throw Exception('User role not found');
     } on FirebaseAuthException catch (e) {
       String message = 'Something went wrong';
-      if (e.code == 'user-not-found') {
-        message = 'No user found for this email';
-      } else if (e.code == 'wrong-password') {
-        message = 'Incorrect password';
-      }
-
+      if (e.code == 'user-not-found') message = 'No user found for this email';
+      if (e.code == 'wrong-password') message = 'Incorrect password';
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));

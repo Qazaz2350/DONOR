@@ -104,6 +104,8 @@ class OrphanageModel {
   final String arThankYouMarker;
   final String contactEmail;
   final String contactPhone;
+  final String cnic; // ✅ added CNIC
+  final String? signBoardImage;
 
   OrphanageModel({
     required this.id,
@@ -123,12 +125,16 @@ class OrphanageModel {
     this.arThankYouMarker = '',
     this.contactEmail = '',
     this.contactPhone = '',
+    this.cnic = '', // ✅ added CNIC
+    this.signBoardImage,
   });
 
   factory OrphanageModel.fromMap(Map<String, dynamic> map, String id) {
     return OrphanageModel(
       id: id,
       name: map['name'] ?? '',
+      cnic: map['cnic'] ?? '', // ✅ fromMap CNIC
+      signBoardImage: map['signBoardImage'], // ✅ fromMap
       address: map['address'] ?? '',
       latitude: map['latitude'],
       longitude: map['longitude'],

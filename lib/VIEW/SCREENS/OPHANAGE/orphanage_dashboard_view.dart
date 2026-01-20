@@ -300,32 +300,32 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
   }
 
   /// ================= PROFILE =================
-  Widget _profileForm(OrphanageViewModel vm) => Column(
-    children: [
-      TextFormField(
-        controller: vm.nameController,
-        decoration: const InputDecoration(labelText: 'Name'),
-      ),
-      TextFormField(
-        controller: vm.emailController,
-        decoration: const InputDecoration(labelText: 'Email'),
-      ),
-      TextFormField(
-        controller: vm.phoneController,
-        decoration: const InputDecoration(labelText: 'Phone'),
-      ),
-      TextFormField(
-        controller: vm.addressController,
-        decoration: const InputDecoration(labelText: 'Address'),
-      ),
-      const SizedBox(height: 8),
-      SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () {},
-          child: const Text('Update Profile'),
-        ),
-      ),
-    ],
-  );
+  // Widget _profileForm(OrphanageViewModel vm) => Column(
+  //   children: [
+  //     TextFormField(
+  //       controller: vm.nameController,
+  //       decoration: const InputDecoration(labelText: 'Name'),
+  //     ),
+  //     TextFormField(
+  //       controller: vm.emailController,
+  //       decoration: const InputDecoration(labelText: 'Email'),
+  //     ),
+  //     TextFormField(
+  //       controller: vm.phoneController,
+  //       decoration: const InputDecoration(labelText: 'Phone'),
+  //     ),
+  //     TextFormField(
+  //       controller: vm.addressController,
+  //       decoration: const InputDecoration(labelText: 'Address'),
+  //     ),
+  //     const SizedBox(height: 8),
+  //     SizedBox(
+  //       width: double.infinity,
+  //       child: ElevatedButton(
+  //         onPressed: () {},
+  //         child: const Text('Update Profile'),
+  //       ),
+  //     ),
+  //   ],
+  // );
 }

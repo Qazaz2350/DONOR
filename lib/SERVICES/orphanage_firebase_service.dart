@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class OrphanageFirebaseService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseStorage _storage = FirebaseStorage.instance;
 
   // ===== Get current UID =====
   String? get uid => _auth.currentUser?.uid;
@@ -16,13 +19,45 @@ class OrphanageFirebaseService {
     required String phone,
     required String address,
     required List<String> needs,
+    String? cnic,
+    File? cnicImage,
+    File? signboardImage,
+    File? orphanageImage,
   }) async {
+    // Upload images if provided
+    String? cnicUrl;
+    String? signboardUrl;
+    String? orphanageUrl;
+
+    if (cnicImage != null) {
+      final ref = _storage.ref('orphanages/$uid/cnic.jpg');
+      await ref.putFile(cnicImage);
+      cnicUrl = await ref.getDownloadURL();
+    }
+
+    if (signboardImage != null) {
+      final ref = _storage.ref('orphanages/$uid/signboard.jpg');
+      await ref.putFile(signboardImage);
+      signboardUrl = await ref.getDownloadURL();
+    }
+
+    if (orphanageImage != null) {
+      final ref = _storage.ref('orphanages/$uid/orphanage.jpg');
+      await ref.putFile(orphanageImage);
+      orphanageUrl = await ref.getDownloadURL();
+    }
+
+    // Save to Firestore
     await _firestore.collection('orphanage').doc(uid).set({
       'name': name,
       'email': email,
       'phone': phone,
       'address': address,
       'needs': needs,
+      'cnic': cnic ?? '',
+      'cnicImage': cnicUrl,
+      'signBoardImage': signboardUrl,
+      'orphanageImage': orphanageUrl,
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
