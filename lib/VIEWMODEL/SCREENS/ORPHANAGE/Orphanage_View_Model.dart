@@ -88,7 +88,6 @@ class OrphanageViewModel extends ChangeNotifier {
   }
 
   Future<void> submitOrphanage(BuildContext context) async {
-    // bool isVerified = false;
     final currentUid = uid;
 
     if (currentUid == null) {
@@ -110,17 +109,6 @@ class OrphanageViewModel extends ChangeNotifier {
       return;
     }
 
-    // Optional: CNIC format validation (uncomment if needed)
-    // final cnicPattern = RegExp(r'^\d{5}-\d{7}-\d$');
-    // if (!cnicPattern.hasMatch(cnicController.text.trim())) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(content: Text('CNIC format is invalid')),
-    //   );
-    //   return;
-    // }
-
-    // ===== Use already-picked images from ViewModel =====
-    // These should be set when the user taps the "Upload Image" buttons
     final cnicImageFile = cnicImage;
     final signboardImageFile = signboardImage;
     final orphanageImageFile = orphanageImage;
@@ -132,6 +120,7 @@ class OrphanageViewModel extends ChangeNotifier {
         .toList();
 
     try {
+      // 🔹 Save profile with status "AdminApprovalWaiting"
       await OrphanageFirebaseService.submitOrphanageProfile(
         uid: currentUid,
         name: nameController.text.trim(),
@@ -139,10 +128,11 @@ class OrphanageViewModel extends ChangeNotifier {
         phone: phoneController.text.trim(),
         address: addressController.text.trim(),
         cnic: cnicController.text.trim(),
-        cnicImage: cnicImageFile, // May be null
-        signboardImage: signboardImageFile, // May be null
-        orphanageImage: orphanageImageFile, // May be null
+        cnicImage: cnicImageFile,
+        signboardImage: signboardImageFile,
+        orphanageImage: orphanageImageFile,
         needs: selectedNeeds,
+        status: "AdminApprovalWaiting", // ✅ Set status for admin approval
       );
 
       ScaffoldMessenger.of(context).showSnackBar(

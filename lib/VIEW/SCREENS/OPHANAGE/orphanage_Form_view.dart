@@ -1,3 +1,5 @@
+import 'package:donate/Utilis/nav.dart';
+import 'package:donate/VIEW/login/signin_view.dart';
 import 'package:donate/VIEWMODEL/SCREENS/ORPHANAGE/Orphanage_View_Model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -145,6 +147,14 @@ class OrphanageSignupView extends StatelessWidget {
                             if (!vm.validateForm()) return;
 
                             await vm.submitOrphanage(context);
+
+                            // Navigate to SignInScreenView after submission
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SignInScreenView(),
+                              ),
+                            );
                           },
                           child: const Text('Submit for Verification'),
                         ),

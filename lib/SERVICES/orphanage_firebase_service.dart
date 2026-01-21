@@ -23,6 +23,7 @@ class OrphanageFirebaseService {
     File? cnicImage,
     File? signboardImage,
     File? orphanageImage,
+    String? status, // 🔹 new parameter
   }) async {
     // Upload images if provided
     String? cnicUrl;
@@ -49,16 +50,17 @@ class OrphanageFirebaseService {
 
     // Save to Firestore
     await _firestore.collection('orphanage').doc(uid).set({
-      'name': name,
-      'email': email,
-      'phone': phone,
-      'address': address,
-      'needs': needs,
+      'orphanageName': name,
+      'orphanageEmail': email,
+      'orphanagephone': phone,
+      'orphanageaddress': address,
+      'Orphanageprofile': needs,
       'cnic': cnic ?? '',
       'cnicImage': cnicUrl,
       'signBoardImage': signboardUrl,
       'orphanageImage': orphanageUrl,
-      'status': 'pending',
+      'status': status ?? "pending", // 🔹 ensure pending if null
+      // 'adminApprove': null,
       'createdAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }

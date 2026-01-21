@@ -50,7 +50,7 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: ThemeMode.system,
-            home: const SignInScreenView(), // unified signup screen
+            home: const SignUpScreenView(), // unified signup screen
           );
         },
       ),

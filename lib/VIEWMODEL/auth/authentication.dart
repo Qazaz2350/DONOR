@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donate/Utilis/nav.dart';
 import 'package:donate/VIEW/SCREENS/ADMIN/admin_dashboard.dart';
+import 'package:donate/VIEW/SCREENS/DONOR/HOME/orphanage_detail_view.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/donor_tabbar_view.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_Form_view.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_dashboard_view.dart';
+import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_rejection_view.dart';
+import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_waiting_view.dart';
 import 'package:donate/VIEW/login/signin_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -88,9 +91,10 @@ class AuthViewModel extends ChangeNotifier {
         'createdAt': FieldValue.serverTimestamp(),
       };
 
-      // 🔹 If orphanage, add verified: false
+      // 🔹 If orphanage, add status as string
       if (_userType == 'orphanage') {
-        userData['verified'] = false;
+        userData['status'] = "OrphanageFormPending";
+        // userData['adminApprove'] = null;
       }
 
       await FirebaseFirestore.instance
@@ -127,7 +131,6 @@ class AuthViewModel extends ChangeNotifier {
     // 🔴 ADMIN CHECK FIRST
     if (email == "admin6677@gmail.com") {
       try {
-        // Firebase auth login for admin
         await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: email,
           password: password,
@@ -142,7 +145,7 @@ class AuthViewModel extends ChangeNotifier {
           context,
         ).showSnackBar(SnackBar(content: Text(message)));
       }
-      return; // ⚡ skip all other validation
+      return; // skip other validation
     }
 
     // ✅ For Donor / Orphanage
@@ -170,8 +173,24 @@ class AuthViewModel extends ChangeNotifier {
           .collection('orphanage')
           .doc(uid)
           .get();
+
       if (orphanageDoc.exists) {
-        Nav.push(context, OrphanageDashboardView());
+        final data = orphanageDoc.data();
+        // final bool? adminApprove = data?['adminApprove'];
+        final String status = data?['status'] ?? "false";
+
+        if (status == "OrphanageFormPending") {
+          Nav.push(context, const OrphanageSignupView());
+        } else if (status == "adminapprove") {
+          Nav.push(context, const OrphanageDashboardView());
+        } else if (status == "adminreject") {
+          // ⏳ Not submitted / incomplete
+          Nav.push(context, const OrphanageRejectionView());
+        } else if (status == "AdminApprovalWaiting") {
+          // ⏳ Waiting for verification
+          Nav.push(context, OrphanagWaitingView());
+        }
+
         return;
       }
 
