@@ -183,7 +183,7 @@ class AuthViewModel extends ChangeNotifier {
           Nav.push(context, const OrphanageSignupView());
         } else if (status == "adminapprove") {
           Nav.push(context, const OrphanageDashboardView());
-        } else if (status == "adminreject") {
+        } else if (status == "Rejected") {
           // ⏳ Not submitted / incomplete
           Nav.push(context, const OrphanageRejectionView());
         } else if (status == "AdminApprovalWaiting") {

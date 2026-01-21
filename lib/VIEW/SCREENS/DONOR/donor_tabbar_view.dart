@@ -40,6 +40,7 @@ class _DonorTabBarViewState extends State<DonorTabBarView>
           return Scaffold(
             // ---------------- AppBar ----------------
             appBar: AppBar(
+              automaticallyImplyLeading: false,
               backgroundColor: AppColors.blue,
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -114,7 +115,9 @@ class _DonorTabBarViewState extends State<DonorTabBarView>
                     controller: _tabController,
                     physics: const NeverScrollableScrollPhysics(),
                     children: [
+                      // home
                       HomeView(),
+                      // donations
                       DonationHistoryPage(vm: vm),
                       // WishCard(),
                       Center(

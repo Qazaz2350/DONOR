@@ -1,11 +1,101 @@
+import 'dart:io';
 import 'package:donate/VIEWMODEL/SCREENS/ORPHANAGE/Orphanage_View_Model.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-// import 'orphanage_view_model.dart'; // import your ViewModel
+// import 'package:donate/VIEWMODEL/SCREENS/OPHANAGE/orphanage_viewmodel.dart';
 
-class OrphanageRequestView extends StatelessWidget {
-  const OrphanageRequestView({Key? key}) : super(key: key);
+class OrphanageRequestView extends StatefulWidget {
+  const OrphanageRequestView({super.key});
+
+  @override
+  State<OrphanageRequestView> createState() => _OrphanageRequestViewState();
+}
+
+class _OrphanageRequestViewState extends State<OrphanageRequestView> {
+  final List<TextEditingController> _needsControllers = [];
+  final List<Map<String, TextEditingController>> _storiesControllers = [];
+  final List<Map<String, TextEditingController>> _eventsControllers = [];
+  final List<File> _extraImages = [];
+
+  Future<File?> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) return File(pickedFile.path);
+    return null;
+  }
+
+  Widget _buildImagePicker(
+    String label,
+    File? file,
+    void Function(File?) onSelect,
+  ) {
+    return GestureDetector(
+      onTap: () async {
+        final img = await _pickImage();
+        if (img != null) onSelect(img);
+      },
+      child: Container(
+        height: 120,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: file != null
+            ? Image.file(file, fit: BoxFit.cover)
+            : Center(child: Text('Select $label')),
+      ),
+    );
+  }
+
+  Widget _buildExtraImagesPicker() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        ..._extraImages.map(
+          (img) => Stack(
+            children: [
+              Image.file(img, width: 100, height: 100, fit: BoxFit.cover),
+              Positioned(
+                right: 0,
+                top: 0,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _extraImages.remove(img);
+                    });
+                  },
+                  child: const CircleAvatar(
+                    radius: 12,
+                    backgroundColor: Colors.red,
+                    child: Icon(Icons.close, size: 16, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        GestureDetector(
+          onTap: () async {
+            final img = await _pickImage();
+            if (img != null) {
+              setState(() {
+                _extraImages.add(img);
+              });
+            }
+          },
+          child: Container(
+            width: 100,
+            height: 100,
+            color: Colors.grey[300],
+            child: const Icon(Icons.add),
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +104,7 @@ class OrphanageRequestView extends StatelessWidget {
       child: Consumer<OrphanageViewModel>(
         builder: (context, vm, _) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Orphanage Form')),
+            appBar: AppBar(title: const Text('Submit OFFD Orphanage')),
             body: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Form(
@@ -22,241 +112,256 @@ class OrphanageRequestView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ===== Basic Info =====
+                    // ===== Basic Fields =====
                     TextFormField(
                       controller: vm.nameController,
-                      decoration: const InputDecoration(labelText: 'Name'),
-                      validator: (val) => val!.isEmpty ? 'Required' : null,
+                      decoration: const InputDecoration(labelText: 'Full Name'),
+                      validator: (val) =>
+                          val == null || val.isEmpty ? 'Required' : null,
                     ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: vm.emailController,
+                      decoration: const InputDecoration(labelText: 'Email'),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (val) =>
+                          val == null || val.isEmpty ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: vm.phoneController,
+                      decoration: const InputDecoration(labelText: 'Phone'),
+                      keyboardType: TextInputType.phone,
+                      validator: (val) =>
+                          val == null || val.isEmpty ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
                     TextFormField(
                       controller: vm.addressController,
                       decoration: const InputDecoration(labelText: 'Address'),
-                      validator: (val) => val!.isEmpty ? 'Required' : null,
+                      validator: (val) =>
+                          val == null || val.isEmpty ? 'Required' : null,
                     ),
+                    const SizedBox(height: 12),
                     TextFormField(
-                      controller: vm.emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Contact Email',
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    TextFormField(
-                      controller: vm.phoneController,
-                      decoration: const InputDecoration(
-                        labelText: 'Contact Phone',
-                      ),
-                      keyboardType: TextInputType.phone,
+                      controller: vm.cnicController,
+                      decoration: const InputDecoration(labelText: 'CNIC'),
+                      keyboardType: TextInputType.number,
+                      validator: (val) =>
+                          val == null || val.isEmpty ? 'Required' : null,
                     ),
                     const SizedBox(height: 20),
 
-                    // ===== Verified =====
-                    SwitchListTile(
-                      title: const Text('Verified'),
-                      value: vm.verified,
-                      onChanged: vm.toggleVerified,
+                    // ===== Main Images =====
+                    _buildImagePicker(
+                      'CNIC Image',
+                      vm.cnicImage,
+                      (file) => vm.cnicImage = file,
                     ),
+                    const SizedBox(height: 12),
+                    _buildImagePicker(
+                      'Signboard Image',
+                      vm.signboardImage,
+                      (file) => vm.signboardImage = file,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildImagePicker(
+                      'Orphanage Image',
+                      vm.orphanageImage,
+                      (file) => vm.orphanageImage = file,
+                    ),
+                    const SizedBox(height: 20),
 
-                    // ===== Images =====
-                    const Text('Images'),
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.add),
-                          onPressed: vm.addImage,
-                        ),
-                      ],
+                    // ===== Extra Images =====
+                    const Text(
+                      'Extra Images',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    Wrap(
-                      spacing: 8,
-                      children: vm.images
-                          .map((img) => Chip(label: Text(img)))
-                          .toList(),
-                    ),
+                    const SizedBox(height: 8),
+                    _buildExtraImagesPicker(),
                     const SizedBox(height: 20),
 
                     // ===== Needs =====
-                    const Text('Needs'),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: vm.needController,
-                            decoration: const InputDecoration(
-                              labelText: 'Need',
+                    const Text(
+                      'Needs',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    ..._needsControllers.map(
+                      (c) => Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: c,
+                              decoration: const InputDecoration(
+                                labelText: 'Need',
+                              ),
                             ),
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.add),
-                          onPressed: vm.addAdditionalNeed,
-                        ),
-                      ],
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              setState(() {
+                                _needsControllers.remove(c);
+                              });
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                    Wrap(
-                      spacing: 8,
-                      children: vm.additionalNeeds
-                          .map((need) => Chip(label: Text(need)))
-                          .toList(),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _needsControllers.add(TextEditingController());
+                        });
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Need'),
                     ),
-                    const SizedBox(height: 20),
-
                     const SizedBox(height: 20),
 
                     // ===== Stories =====
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Stories', style: TextStyle(fontSize: 16)),
-                        IconButton(
-                          onPressed: vm.addStory,
-                          icon: const Icon(Icons.add),
-                        ),
-                      ],
+                    const Text(
+                      'Stories',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    ...vm.stories.asMap().entries.map((entry) {
-                      int i = entry.key;
-                      var story = entry.value;
-                      return Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            children: [
-                              TextFormField(
-                                decoration: const InputDecoration(
-                                  labelText: 'Title',
-                                ),
-                                onChanged: (val) => story['title'] = val,
-                              ),
-                              TextFormField(
-                                decoration: const InputDecoration(
-                                  labelText: 'Content',
-                                ),
-                                maxLines: 2,
-                                onChanged: (val) => story['content'] = val,
-                              ),
-                              TextFormField(
-                                decoration: const InputDecoration(
-                                  labelText: 'Date',
-                                ),
-                                readOnly: true,
-                                controller: TextEditingController(
-                                  text: DateFormat(
-                                    'yyyy-MM-dd',
-                                  ).format(story['date']),
-                                ),
-                                onTap: () async {
-                                  DateTime? picked = await showDatePicker(
-                                    context: context,
-                                    initialDate: story['date'],
-                                    firstDate: DateTime(2000),
-                                    lastDate: DateTime(2100),
-                                  );
-                                  if (picked != null) {
-                                    story['date'] = picked;
-                                    vm.notifyListeners();
-                                  }
-                                },
-                              ),
-                            ],
+                    const SizedBox(height: 8),
+                    ..._storiesControllers.map(
+                      (map) => Column(
+                        children: [
+                          TextFormField(
+                            controller: map['title'],
+                            decoration: const InputDecoration(
+                              labelText: 'Title',
+                            ),
                           ),
-                        ),
-                      );
-                    }),
-
+                          TextFormField(
+                            controller: map['description'],
+                            decoration: const InputDecoration(
+                              labelText: 'Description',
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () {
+                                setState(() {
+                                  _storiesControllers.remove(map);
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _storiesControllers.add({
+                            'title': TextEditingController(),
+                            'description': TextEditingController(),
+                          });
+                        });
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Story'),
+                    ),
                     const SizedBox(height: 20),
 
                     // ===== Volunteering Events =====
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Volunteering Events',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        IconButton(
-                          onPressed: vm.addEvent,
-                          icon: const Icon(Icons.add),
-                        ),
-                      ],
+                    const Text(
+                      'Volunteering Events',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    ...vm.volunteeringEvents.asMap().entries.map((entry) {
-                      int i = entry.key;
-                      var event = entry.value;
-                      return Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            children: [
-                              TextFormField(
-                                decoration: const InputDecoration(
-                                  labelText: 'ID',
-                                ),
-                                onChanged: (val) => event['id'] = val,
-                              ),
-                              TextFormField(
-                                decoration: const InputDecoration(
-                                  labelText: 'Title',
-                                ),
-                                onChanged: (val) => event['title'] = val,
-                              ),
-                              TextFormField(
-                                decoration: const InputDecoration(
-                                  labelText: 'Description',
-                                ),
-                                onChanged: (val) => event['description'] = val,
-                              ),
-                              TextFormField(
-                                decoration: const InputDecoration(
-                                  labelText: 'Capacity',
-                                ),
-                                keyboardType: TextInputType.number,
-                                onChanged: (val) =>
-                                    event['capacity'] = int.tryParse(val) ?? 0,
-                              ),
-                              TextFormField(
-                                decoration: const InputDecoration(
-                                  labelText: 'Registered',
-                                ),
-                                keyboardType: TextInputType.number,
-                                onChanged: (val) => event['registered'] =
-                                    int.tryParse(val) ?? 0,
-                              ),
-                              TextFormField(
-                                decoration: const InputDecoration(
-                                  labelText: 'Date',
-                                ),
-                                readOnly: true,
-                                controller: TextEditingController(
-                                  text: DateFormat(
-                                    'yyyy-MM-dd',
-                                  ).format(event['date']),
-                                ),
-                                onTap: () async {
-                                  DateTime? picked = await showDatePicker(
-                                    context: context,
-                                    initialDate: event['date'],
-                                    firstDate: DateTime(2000),
-                                    lastDate: DateTime(2100),
-                                  );
-                                  if (picked != null) {
-                                    event['date'] = picked;
-                                    vm.notifyListeners();
-                                  }
-                                },
-                              ),
-                            ],
+                    const SizedBox(height: 8),
+                    ..._eventsControllers.map(
+                      (map) => Column(
+                        children: [
+                          TextFormField(
+                            controller: map['name'],
+                            decoration: const InputDecoration(
+                              labelText: 'Event Name',
+                            ),
                           ),
-                        ),
-                      );
-                    }),
-
-                    const SizedBox(height: 20),
+                          TextFormField(
+                            controller: map['date'],
+                            decoration: const InputDecoration(
+                              labelText: 'Event Date',
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () {
+                                setState(() {
+                                  _eventsControllers.remove(map);
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _eventsControllers.add({
+                            'name': TextEditingController(),
+                            'date': TextEditingController(),
+                          });
+                        });
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Event'),
+                    ),
+                    const SizedBox(height: 24),
 
                     // ===== Submit Button =====
-                    Center(
+                    SizedBox(
+                      width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () => vm.submitOrphanage(context),
-                        child: const Text('Submit'),
+                        onPressed: () async {
+                          if (vm.validateForm()) {
+                            // Prepare data arrays
+                            final needs = _needsControllers
+                                .map((c) => c.text)
+                                .toList();
+                            final stories = _storiesControllers
+                                .map(
+                                  (m) => {
+                                    'title': m['title']!.text,
+                                    'description': m['description']!.text,
+                                  },
+                                )
+                                .toList();
+                            final events = _eventsControllers
+                                .map(
+                                  (m) => {
+                                    'name': m['name']!.text,
+                                    'date': m['date']!.text,
+                                  },
+                                )
+                                .toList();
+                            final images = _extraImages
+                                .map((f) => f.path)
+                                .toList();
+
+                            await vm.submitOffdOrphanage(
+                              context,
+                              images: images,
+                              needs: needs,
+                              stories: stories,
+                              volunteeringEvents: events,
+                              verified: false,
+                            );
+                          }
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Text('Submit Orphanage'),
+                        ),
                       ),
                     ),
                   ],
