@@ -1,10 +1,9 @@
-import 'package:donate/MODELS/SCREENS/DONOR/orphanage_model.dart';
 import 'package:donate/UTILIS/app_colors.dart';
 import 'package:donate/Utilis/app_fonts.dart';
 import 'package:donate/Utilis/extention.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/HOME/app_drawer.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/HOME/donation_status_view.dart';
-import 'package:donate/VIEW/SCREENS/DONOR/HOME/orphanage_detail_view.dart';
+
 import 'package:donate/VIEWMODEL/SCREENS/SENDER/donor_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -25,6 +24,10 @@ class _HomeViewState extends State<HomeView>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+
+    // ✅ Fetch orphanages once
+    // final vm = DonorViewModel();
+    // vm.fetchOffdOrphanages();
   }
 
   @override
@@ -36,7 +39,7 @@ class _HomeViewState extends State<HomeView>
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => DonorViewModel(),
+      create: (_) => DonorViewModel()..fetchOffdOrphanages(),
       child: Consumer<DonorViewModel>(
         builder: (context, vm, child) {
           return Scaffold(
@@ -46,6 +49,7 @@ class _HomeViewState extends State<HomeView>
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ------------------ Search Bar ------------------
                 Container(
                   padding: EdgeInsets.only(
                     top: 10.h,
@@ -82,29 +86,11 @@ class _HomeViewState extends State<HomeView>
                         borderRadius: BorderRadius.circular(16.r),
                         borderSide: BorderSide.none,
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.r),
-                        borderSide: BorderSide(
-                          color: context.colors.onSurface.withOpacity(0.1),
-                          width: 1,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.r),
-                        borderSide: BorderSide(
-                          color: AppColors.primary,
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 20.w,
-                        vertical: 12.h,
-                      ),
                     ),
                   ),
                 ),
 
-                // ------------------ WELCOME CARD ------------------
+                // ------------------ Welcome & Stats ------------------
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 15.w),
                   child: Column(
@@ -123,239 +109,64 @@ class _HomeViewState extends State<HomeView>
                         ),
                       ),
 
-                      // ------------------ ORPHANAGES GRID ------------------
-                      SizedBox(
-                        height: 210.h, // adjust height to fit your card
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: dummyOrphanages.length,
-                          // padding: EdgeInsets.symmetric(horizontal: 12.w),
-                          itemBuilder: (context, index) {
-                            final orphanage = dummyOrphanages[index];
-                            return Padding(
-                              padding: EdgeInsets.only(right: 12.w),
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => OrphanageDetailView(
-                                        orphanage: orphanage,
+                      // ------------------ Orphanage Cards ------------------
+                      vm.isOffdLoading
+                          ? const Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Center(child: CircularProgressIndicator()),
+                            )
+                          : vm.offdOrphanages.isEmpty
+                          ? const Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Center(child: Text('No orphanages found')),
+                            )
+                          : SizedBox(
+                              height: 180.h,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: vm.offdOrphanages.length,
+                                padding: EdgeInsets.symmetric(horizontal: 5.w),
+                                itemBuilder: (context, index) {
+                                  final orphanage = vm.offdOrphanages[index];
+
+                                  return Card(
+                                    margin: EdgeInsets.symmetric(
+                                      horizontal: 8.w,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12.r),
+                                    ),
+                                    elevation: 3,
+                                    child: Container(
+                                      width: 250.w,
+                                      padding: EdgeInsets.all(10.w),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            orphanage['offd_fullname'] ??
+                                                'No Name',
+                                          ),
+
+                                          // Status & Address
+                                          Text(
+                                            'Status: ${orphanage['offd_status'] ?? 'pending'}',
+                                            style: TextStyle(
+                                              fontSize: FontSizes.f12,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Address: ${orphanage['offd_address'] ?? 'N/A'}',
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   );
                                 },
-                                child: Container(
-                                  width: 130.w,
-                                  decoration: BoxDecoration(
-                                    color: context.colors.surface,
-                                    borderRadius: BorderRadius.circular(20.r),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.primary.withOpacity(
-                                          0.08,
-                                        ),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 8),
-                                      ),
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.04),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Image + gradient + verified
-                                      Stack(
-                                        children: [
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.vertical(
-                                              top: Radius.circular(20.r),
-                                            ),
-                                            child: Image.network(
-                                              orphanage.images.isNotEmpty
-                                                  ? orphanage.images[0]
-                                                  : 'https://picsum.photos/200/300',
-                                              height: 120.h,
-                                              width: double.infinity,
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ),
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.vertical(
-                                                    top: Radius.circular(20.r),
-                                                  ),
-                                              gradient: LinearGradient(
-                                                begin: Alignment.topCenter,
-                                                end: Alignment.bottomCenter,
-                                                colors: [
-                                                  Colors.transparent,
-                                                  Colors.black.withOpacity(0.3),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          if (orphanage.verified)
-                                            Positioned(
-                                              top: 8.h,
-                                              right: 8.w,
-                                              child: Container(
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal: 6.w,
-                                                  vertical: 3.h,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: AppColors.white,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                        12.r,
-                                                      ),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.black
-                                                          .withOpacity(0.1),
-                                                      blurRadius: 8,
-                                                      offset: const Offset(
-                                                        0,
-                                                        2,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    Icon(
-                                                      Icons.verified,
-                                                      color:
-                                                          AppColors.secondary,
-                                                      size: 12.sp,
-                                                    ),
-                                                    SizedBox(width: 3.w),
-                                                    Text(
-                                                      'Verified',
-                                                      style: TextStyle(
-                                                        color:
-                                                            AppColors.secondary,
-                                                        fontSize: FontSizes.f10,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-
-                                      // Content
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 6,
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                orphanage.name,
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  fontSize: FontSizes.f12,
-                                                  fontWeight: FontWeight.w700,
-                                                  color:
-                                                      context.colors.onSurface,
-                                                  height: 1.3,
-                                                ),
-                                              ),
-                                              SizedBox(height: 6.h),
-                                              Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.location_on_outlined,
-                                                    size: 12.sp,
-                                                    color: AppColors.primary
-                                                        .withOpacity(0.6),
-                                                  ),
-                                                  SizedBox(width: 3.w),
-                                                  Expanded(
-                                                    child: Text(
-                                                      orphanage.address,
-                                                      maxLines: 2,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      style: TextStyle(
-                                                        fontSize: FontSizes.f10,
-                                                        color: context
-                                                            .colors
-                                                            .onSurface
-                                                            .withOpacity(0.6),
-                                                        height: 1.3,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const Spacer(),
-                                              Container(
-                                                width: double.infinity,
-                                                padding: EdgeInsets.symmetric(
-                                                  vertical: 6.h,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: AppColors.primary
-                                                      .withOpacity(0.1),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                        8.r,
-                                                      ),
-                                                ),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: [
-                                                    Text(
-                                                      'View Details',
-                                                      style: TextStyle(
-                                                        fontSize: FontSizes.f10,
-                                                        color:
-                                                            AppColors.primary,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                    SizedBox(width: 4.w),
-                                                    Icon(
-                                                      Icons.arrow_forward_ios,
-                                                      size: 8.sp,
-                                                      color: AppColors.primary,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
                               ),
-                            );
-                          },
-                        ),
-                      ),
+                            ),
                     ],
                   ),
                 ),

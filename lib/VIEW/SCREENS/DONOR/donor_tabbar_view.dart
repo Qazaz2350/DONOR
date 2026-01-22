@@ -1,7 +1,6 @@
 import 'package:donate/UTILIS/app_colors.dart';
 import 'package:donate/Utilis/app_fonts.dart';
 import 'package:donate/Utilis/extention.dart';
-import 'package:donate/VIEW/SCREENS/DONOR/DONATIONS/donations_view.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/HOME/Home_view.dart';
 import 'package:donate/VIEWMODEL/SCREENS/SENDER/donor_viewmodel.dart';
 import 'package:flutter/material.dart';
@@ -39,7 +38,7 @@ class _DonorTabBarViewState extends State<DonorTabBarView>
         builder: (context, vm, child) {
           return Scaffold(
             // ---------------- AppBar ----------------
-            appBar: AppBar(
+            appBar: AppBar( 
               automaticallyImplyLeading: false,
               backgroundColor: AppColors.blue,
               title: Row(
@@ -118,7 +117,7 @@ class _DonorTabBarViewState extends State<DonorTabBarView>
                       // home
                       HomeView(),
                       // donations
-                      DonationHistoryPage(vm: vm),
+                      // DonationHistoryPage(vm: vm),
                       // WishCard(),
                       Center(
                         child: Text(

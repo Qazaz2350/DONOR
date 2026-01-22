@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donate/Utilis/nav.dart';
 import 'package:donate/VIEW/SCREENS/ADMIN/admin_dashboard.dart';
-import 'package:donate/VIEW/SCREENS/DONOR/HOME/orphanage_detail_view.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/donor_tabbar_view.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_Form_view.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_dashboard_view.dart';
@@ -181,7 +180,7 @@ class AuthViewModel extends ChangeNotifier {
 
         if (status == "OrphanageFormPending") {
           Nav.push(context, const OrphanageSignupView());
-        } else if (status == "adminapprove") {
+        } else if (status == "Approved") {
           Nav.push(context, const OrphanageDashboardView());
         } else if (status == "Rejected") {
           // ⏳ Not submitted / incomplete
