@@ -180,7 +180,7 @@ class AuthViewModel extends ChangeNotifier {
 
         if (status == "OrphanageFormPending") {
           Nav.push(context, const OrphanageSignupView());
-        } else if (status == "Approved") {
+        } else if (status == "accepted") {
           Nav.push(context, const OrphanageDashboardView());
         } else if (status == "Rejected") {
           // ⏳ Not submitted / incomplete

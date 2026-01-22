@@ -1,3 +1,4 @@
+import 'package:donate/TESTING.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/HOME/Home_view.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/donor_tabbar_view.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_Form_view.dart';
@@ -50,7 +51,7 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: ThemeMode.system,
-            home: const SignUpScreenView(), // unified signup screen
+            home: const SignInScreenView(), // unified signup screen
           );
         },
       ),

@@ -35,26 +35,6 @@ class OrphanageSignupView extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
 
-                        // Email
-                        TextFormField(
-                          controller: vm.emailController,
-                          decoration: const InputDecoration(labelText: 'Email'),
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Required'
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Phone
-                        TextFormField(
-                          controller: vm.phoneController,
-                          decoration: const InputDecoration(labelText: 'Phone'),
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Required'
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-
                         // Address
                         TextFormField(
                           controller: vm.addressController,

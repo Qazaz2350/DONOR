@@ -113,44 +113,6 @@ class _OrphanageRequestViewState extends State<OrphanageRequestView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ===== Basic Fields =====
-                    TextFormField(
-                      controller: vm.nameController,
-                      decoration: const InputDecoration(labelText: 'Full Name'),
-                      validator: (val) =>
-                          val == null || val.isEmpty ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: vm.emailController,
-                      decoration: const InputDecoration(labelText: 'Email'),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (val) =>
-                          val == null || val.isEmpty ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: vm.phoneController,
-                      decoration: const InputDecoration(labelText: 'Phone'),
-                      keyboardType: TextInputType.phone,
-                      validator: (val) =>
-                          val == null || val.isEmpty ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: vm.addressController,
-                      decoration: const InputDecoration(labelText: 'Address'),
-                      validator: (val) =>
-                          val == null || val.isEmpty ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: vm.cnicController,
-                      decoration: const InputDecoration(labelText: 'CNIC'),
-                      keyboardType: TextInputType.number,
-                      validator: (val) =>
-                          val == null || val.isEmpty ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 20),
 
                     // ===== Main Images =====
                     _buildImagePicker(

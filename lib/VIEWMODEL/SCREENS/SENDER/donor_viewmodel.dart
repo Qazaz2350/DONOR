@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donate/MODELS/SCREENS/DONOR/MYDONATION_model.dart';
-import 'package:donate/SERVICES/admin_service.dart';
 
 class DonorViewModel extends ChangeNotifier {
-  final AdminService _adminService = AdminService();
-
   /// ---------------------------
   /// GREETING
   /// ---------------------------
@@ -77,27 +75,35 @@ class DonorViewModel extends ChangeNotifier {
   }
 
   /// ---------------------------
-  /// OFFD ORPHANAGES (ADMIN SERVICE)
+  /// FIRESTORE ORPHANAGE LOGIC (from testing)
   /// ---------------------------
-  bool isOffdLoading = false;
-  List<Map<String, dynamic>> offdOrphanages = [];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  List<Map<String, dynamic>> acceptedOrphanages = [];
+  bool isFetchingOrphanages = false;
+  String? orphanageError;
 
-  /// ---------------------------
-  /// Fetch all orphanage profiles
-  /// ---------------------------
-  Future<void> fetchOffdOrphanages() async {
-    isOffdLoading = true;
+  Future<void> fetchAcceptedOrphanages() async {
+    isFetchingOrphanages = true;
+    orphanageError = null;
     notifyListeners();
 
     try {
-      offdOrphanages = await _adminService.fetchAllOrphanageProfiles();
-      print("offdOrphanages: $offdOrphanages");
+      QuerySnapshot snapshot = await _firestore
+          .collection('orphanage')
+          .where('status', isEqualTo: 'accepted')
+          .get();
+
+      acceptedOrphanages = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        data['uid'] = doc.id;
+        return data;
+      }).toList();
     } catch (e) {
-      print('Error fetching orphanages: $e');
-      offdOrphanages = [];
+      orphanageError = 'Error fetching orphanages: $e';
+      acceptedOrphanages = [];
     }
 
-    isOffdLoading = false;
+    isFetchingOrphanages = false;
     notifyListeners();
   }
 }

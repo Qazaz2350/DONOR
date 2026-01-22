@@ -13,17 +13,14 @@ class OrphanageFirebaseService {
 
   // ===== Submit Orphanage Profile =====
   static Future<void> submitOrphanageProfile({
-    required String uid,
     required String name,
-    required String email,
-    required String phone,
+    required String uid,
     required String address,
-    required List<String> needs,
     String? cnic,
     File? cnicImage,
     File? signboardImage,
     File? orphanageImage,
-    String? status, // 🔹 new parameter
+    String? status,
   }) async {
     // Upload images if provided
     String? cnicUrl;
@@ -50,17 +47,14 @@ class OrphanageFirebaseService {
 
     // Save to Firestore
     await _firestore.collection('orphanage').doc(uid).set({
-      'orphanageName': name,
-      'orphanageEmail': email,
-      'orphanagephone': phone,
       'orphanageaddress': address,
-      'Orphanageprofile': needs,
-      'cnic': cnic ?? '',
+      'cnic': cnic,
+      'orphanagename': name,
+
       'cnicImage': cnicUrl,
       'signBoardImage': signboardUrl,
       'orphanageImage': orphanageUrl,
-      'status': status ?? "pending", // 🔹 ensure pending if null
-      // 'adminApprove': null,
+      'status': status ?? "pending",
       'createdAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -68,57 +62,50 @@ class OrphanageFirebaseService {
   // ===== Submit OFFD Orphanage Profile =====
   static Future<void> submitOffdOrphanageProfile({
     required String uid,
-    required String offd_fullname,
-    required String offd_email,
-    required String offd_phone,
-    required String offd_address,
-    required List<String> offd_needs,
-    String? offd_cnic,
-    File? offd_cnicImage,
-    File? offd_signboardImage,
-    File? offd_orphanageImage,
-    List<String>? offd_images,
-    List<Map<String, dynamic>>? offd_stories,
-    List<Map<String, dynamic>>? offd_volunteeringEvents,
-    bool offd_verified = false,
-    String? offd_status,
+
+    required List<String> needs,
+
+    File? cnicImage,
+    File? signboardImage,
+    File? orphanageImage,
+    List<String>? images,
+    List<Map<String, dynamic>>? stories,
+    List<Map<String, dynamic>>? volunteeringEvents,
+    bool verified = false,
+    // String? status,
   }) async {
     String? cnicUrl, signboardUrl, orphanageUrl;
 
-    if (offd_cnicImage != null) {
-      final ref = _storage.ref('orphanages/$uid/offd_cnic.jpg');
-      await ref.putFile(offd_cnicImage);
+    if (cnicImage != null) {
+      final ref = _storage.ref('orphanages/$uid/cnic.jpg');
+      await ref.putFile(cnicImage);
       cnicUrl = await ref.getDownloadURL();
     }
 
-    if (offd_signboardImage != null) {
-      final ref = _storage.ref('orphanages/$uid/offd_signboard.jpg');
-      await ref.putFile(offd_signboardImage);
+    if (signboardImage != null) {
+      final ref = _storage.ref('orphanages/$uid/signboard.jpg');
+      await ref.putFile(signboardImage);
       signboardUrl = await ref.getDownloadURL();
     }
 
-    if (offd_orphanageImage != null) {
-      final ref = _storage.ref('orphanages/$uid/offd_orphanage.jpg');
-      await ref.putFile(offd_orphanageImage);
+    if (orphanageImage != null) {
+      final ref = _storage.ref('orphanages/$uid/orphanage.jpg');
+      await ref.putFile(orphanageImage);
       orphanageUrl = await ref.getDownloadURL();
     }
 
     await _firestore.collection('orphanage').doc(uid).set({
-      'offd_fullname': offd_fullname,
-      'offd_email': offd_email,
-      'offd_phone': offd_phone,
-      'offd_address': offd_address,
-      'offd_needs': offd_needs,
-      'offd_cnic': offd_cnic ?? '',
-      'offd_cnicImage': cnicUrl,
-      'offd_signBoardImage': signboardUrl,
-      'offd_orphanageImage': orphanageUrl,
-      'offd_additionalImages': offd_images ?? [],
-      'offd_stories': offd_stories ?? [],
-      'offd_volunteeringEvents': offd_volunteeringEvents ?? [],
-      'offd_verified': offd_verified,
-      'offd_status': offd_status ?? "pending",
-      'offd_createdAt': FieldValue.serverTimestamp(),
+      'needs': needs,
+
+      'signBoardImage': signboardUrl,
+      'cnicImage': cnicUrl,
+      'orphanageImage': orphanageUrl,
+      'additionalImages': images ?? [],
+      'stories': stories ?? [],
+      'volunteeringEvents': volunteeringEvents ?? [],
+      'verified': verified,
+      // 'status': status ?? "pending",
+      'createdAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 }

@@ -6,7 +6,7 @@ class AdminViewModel extends ChangeNotifier {
 
   List<Map<String, dynamic>> orphanages = [];
   List<Map<String, dynamic>> donors = [];
-  List<Map<String, dynamic>> adminActions = []; // 🔹 History
+  List<Map<String, dynamic>> adminActions = [];
   bool isLoading = false;
 
   // 🔹 FETCH USERS AND ACTIONS
@@ -17,22 +17,36 @@ class AdminViewModel extends ChangeNotifier {
     try {
       // Fetch orphanages
       final orphanageSnap = await _firestore.collection('orphanage').get();
-      orphanages = orphanageSnap.docs.map((doc) {
-        final data = doc.data();
-        return {
-          'id': doc.id,
-          'fullName': data['fullName'] ?? '',
-          'email': data['email'] ?? '',
-          'phone': data['phone'] ?? '',
-          'address': data['address'] ?? '',
-          'cnic': data['cnic'] ?? '',
-          'profile': List<String>.from(data['Orphanageprofile'] ?? []),
-          'status': data['status'] ?? 'OrphanageFormPending',
-          'cnicImage': data['cnicImage'] ?? '',
-          'signboardImage': data['signboardImage'] ?? '',
-          'orphanageImage': data['orphanageImage'] ?? '',
-        };
-      }).toList();
+
+      orphanages = orphanageSnap.docs
+          .map((doc) {
+            final data = doc.data();
+
+            return {
+              'id': doc.id,
+
+              // Signup data
+              'fullName': data['fullName'] ?? '',
+              'email': data['email'] ?? '',
+              'phone': data['phone'] ?? '',
+
+              // Orphanage profile data
+              'address': data['orphanageaddress'] ?? '',
+              'cnic': data['cnic'] ?? '',
+              'profile': List<String>.from(data['Orphanageprofile'] ?? []),
+
+              // Images
+              'cnicImage': data['cnicImage'] ?? '',
+              'signboardImage': data['signBoardImage'] ?? '',
+              'orphanageImage': data['orphanageImage'] ?? '',
+
+              // Status
+              'status': data['status'] ?? 'OrphanageFormPending',
+            };
+          })
+          // 🔹 SHOW ONLY THOSE WHO SUBMITTED CNIC
+          .where((o) => (o['cnic'] as String).isNotEmpty)
+          .toList();
 
       // Fetch donors
       final donorSnap = await _firestore.collection('donor').get();
@@ -46,11 +60,12 @@ class AdminViewModel extends ChangeNotifier {
         };
       }).toList();
 
-      // 🔹 Fetch admin actions for History tab
+      // Fetch admin actions
       final actionSnap = await _firestore
           .collection('adminactions')
           .orderBy('timestamp', descending: true)
           .get();
+
       adminActions = actionSnap.docs.map((doc) => doc.data()).toList();
     } catch (e) {
       debugPrint('Error fetching users or actions: $e');
@@ -60,28 +75,30 @@ class AdminViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // 🔹 SET ADMIN STATUS AND LOG ACTION
+  // 🔹 APPROVE / REJECT ORPHANAGE
   Future<void> setAdminApproval({
     required String orphanageId,
-    required bool approve, // true = approve, false = reject
+    required bool approve,
   }) async {
     try {
       final orphanage = orphanages.firstWhere((o) => o['id'] == orphanageId);
 
+      final newStatus = approve ? 'accepted' : 'rejected';
+
       // Update orphanage status
       await _firestore.collection('orphanage').doc(orphanageId).update({
-        'status': approve ? 'Approved' : 'Rejected',
+        'status': newStatus,
       });
 
       // Log admin action
       await _firestore.collection('adminactions').add({
         'orphanageId': orphanageId,
         'orphanageName': orphanage['fullName'],
-        'action': approve ? 'Approved' : 'Rejected',
+        'action': newStatus,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      await fetchUsers(); // refresh list
+      await fetchUsers(); // refresh
     } catch (e) {
       debugPrint('Error setting admin status: $e');
     }

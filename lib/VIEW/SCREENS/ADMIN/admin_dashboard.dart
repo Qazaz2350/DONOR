@@ -100,7 +100,7 @@ class AdminOrphanagePage extends StatelessWidget {
 
                   // 3️⃣ Approval / Rejection
                   RefreshIndicator(
-                    onRefresh: vm.fetchUsers,
+                    onRefresh: () => vm.fetchUsers(),
                     child: waitingOrphanages.isEmpty
                         ? const Center(
                             child: Text(
@@ -112,10 +112,12 @@ class AdminOrphanagePage extends StatelessWidget {
                             ),
                           )
                         : ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.all(16),
                             itemCount: waitingOrphanages.length,
                             itemBuilder: (context, index) {
                               final data = waitingOrphanages[index];
+
                               return Card(
                                 elevation: 3,
                                 margin: const EdgeInsets.only(bottom: 16),
@@ -139,9 +141,9 @@ class AdminOrphanagePage extends StatelessWidget {
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
-                                          const Text(
-                                            'Waiting',
-                                            style: TextStyle(
+                                          Text(
+                                            data['status'] ?? 'Waiting',
+                                            style: const TextStyle(
                                               fontWeight: FontWeight.w600,
                                               color: Colors.orange,
                                             ),
@@ -149,15 +151,20 @@ class AdminOrphanagePage extends StatelessWidget {
                                         ],
                                       ),
                                       const SizedBox(height: 10),
+
                                       Text('Email: ${data['email'] ?? ''}'),
                                       Text('Phone: ${data['phone'] ?? ''}'),
                                       Text('Address: ${data['address'] ?? ''}'),
                                       Text('CNIC: ${data['cnic'] ?? ''}'),
+
                                       const SizedBox(height: 6),
+
                                       Text(
-                                        'Profile: ${(data['profile'] as List<String>?)?.join(', ') ?? ''}',
+                                        'Profile: ${(data['profile'] as List?)?.join(', ') ?? 'N/A'}',
                                       ),
+
                                       const SizedBox(height: 12),
+
                                       Row(
                                         children: [
                                           Expanded(
@@ -169,8 +176,8 @@ class AdminOrphanagePage extends StatelessWidget {
                                                       BorderRadius.circular(8),
                                                 ),
                                               ),
-                                              onPressed: () {
-                                                vm.setAdminApproval(
+                                              onPressed: () async {
+                                                await vm.setAdminApproval(
                                                   orphanageId: data['id'],
                                                   approve: true,
                                                 );
@@ -188,8 +195,8 @@ class AdminOrphanagePage extends StatelessWidget {
                                                       BorderRadius.circular(8),
                                                 ),
                                               ),
-                                              onPressed: () {
-                                                vm.setAdminApproval(
+                                              onPressed: () async {
+                                                await vm.setAdminApproval(
                                                   orphanageId: data['id'],
                                                   approve: false,
                                                 );

@@ -37,8 +37,6 @@ class OrphanageViewModel extends ChangeNotifier {
     }
 
     if (nameController.text.trim().isEmpty ||
-        emailController.text.trim().isEmpty ||
-        phoneController.text.trim().isEmpty ||
         addressController.text.trim().isEmpty) {
       _showSnack(context, 'Please fill all fields including CNIC');
       return;
@@ -48,14 +46,13 @@ class OrphanageViewModel extends ChangeNotifier {
       await OrphanageFirebaseService.submitOrphanageProfile(
         uid: currentUid,
         name: nameController.text.trim(),
-        email: emailController.text.trim(),
-        phone: phoneController.text.trim(),
+
         address: addressController.text.trim(),
         cnic: cnicController.text.trim(),
         cnicImage: cnicImage,
         signboardImage: signboardImage,
         orphanageImage: orphanageImage,
-        needs: [],
+
         status: "AdminApprovalWaiting",
       );
 
@@ -84,30 +81,19 @@ class OrphanageViewModel extends ChangeNotifier {
       return;
     }
 
-    // ===== Map controllers to OFFD variables =====
-    final offd_fullname = nameController.text.trim();
-    final offd_email = emailController.text.trim();
-    final offd_phone = phoneController.text.trim();
-    final offd_address = addressController.text.trim();
-    final offd_cnic = cnicController.text.trim();
-
     try {
       await OrphanageFirebaseService.submitOffdOrphanageProfile(
         uid: currentUid,
-        offd_fullname: offd_fullname,
-        offd_email: offd_email,
-        offd_phone: offd_phone,
-        offd_address: offd_address,
-        offd_cnic: offd_cnic,
-        offd_cnicImage: cnicImage,
-        offd_signboardImage: signboardImage,
-        offd_orphanageImage: orphanageImage,
-        offd_needs: needs ?? [],
-        offd_images: images ?? [],
-        offd_stories: stories ?? [],
-        offd_volunteeringEvents: volunteeringEvents ?? [],
-        offd_verified: verified,
-        offd_status: 'AdminApprovalWaiting',
+
+        cnicImage: cnicImage,
+        signboardImage: signboardImage,
+        orphanageImage: orphanageImage,
+        needs: needs ?? [],
+        images: images ?? [],
+        stories: stories ?? [],
+        volunteeringEvents: volunteeringEvents ?? [],
+        verified: verified,
+        // status: 'AdminApprovalWaiting',
       );
 
       _showSnack(context, 'OFFD Orphanage profile submitted for verification');
