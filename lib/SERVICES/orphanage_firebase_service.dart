@@ -21,6 +21,8 @@ class OrphanageFirebaseService {
     File? signboardImage,
     File? orphanageImage,
     String? status,
+    double? latitude,
+    double? longitude,
   }) async {
     // Upload images if provided
     String? cnicUrl;
@@ -56,6 +58,8 @@ class OrphanageFirebaseService {
       'orphanageImage': orphanageUrl,
       'status': status ?? "pending",
       'createdAt': FieldValue.serverTimestamp(),
+      "latitude": latitude,
+      "longitude": longitude,
     }, SetOptions(merge: true));
   }
 
@@ -107,5 +111,21 @@ class OrphanageFirebaseService {
       // 'status': status ?? "pending",
       'createdAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+  }
+
+  static Future<Map<String, dynamic>?> fetchOrphanageProfile({
+    required String uid,
+  }) async {
+    try {
+      final doc = await _firestore.collection('orphanage').doc(uid).get();
+      if (doc.exists) {
+        return doc.data(); // Returns the orphanage data as a Map
+      } else {
+        return null; // No orphanage found for this UID
+      }
+    } catch (e) {
+      print('Error fetching orphanage profile: $e');
+      return null;
+    }
   }
 }

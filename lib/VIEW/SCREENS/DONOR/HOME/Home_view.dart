@@ -10,7 +10,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({Key? key}) : super(key: key);
+  final String username;
+  final String useremail;
+  final String userphone;
+  const HomeView({
+    Key? key,
+    required this.username,
+    required this.useremail,
+    required this.userphone,
+  }) : super(key: key);
 
   @override
   State<HomeView> createState() => _HomeViewState();
@@ -35,9 +43,7 @@ class _HomeViewState extends State<HomeView>
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => DonorViewModel()
-        ..fetchDonorStats()
-        ..fetchAcceptedOrphanages(),
+      create: (_) => DonorViewModel()..fetchAcceptedOrphanages(),
       child: Consumer<DonorViewModel>(
         builder: (context, vm, child) {
           return Scaffold(
@@ -189,6 +195,9 @@ class _HomeViewState extends State<HomeView>
                                         builder: (_) =>
                                             OrphanageFoundationDetail(
                                               orphanage: orphanage,
+                                              useremail: widget.useremail,
+                                              username: widget.username,
+                                              userphone: widget.userphone,
                                             ),
                                       ),
                                     );
@@ -369,6 +378,12 @@ class _HomeViewState extends State<HomeView>
                                                               OrphanageFoundationDetail(
                                                                 orphanage:
                                                                     orphanage,
+                                                                useremail: widget
+                                                                    .useremail,
+                                                                username: widget
+                                                                    .username,
+                                                                userphone: widget
+                                                                    .userphone,
                                                               ),
                                                         ),
                                                       );

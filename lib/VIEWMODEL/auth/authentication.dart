@@ -163,7 +163,19 @@ class AuthViewModel extends ChangeNotifier {
           .doc(uid)
           .get();
       if (donorDoc.exists) {
-        Nav.push(context, const DonorTabBarView());
+        final donorData = donorDoc.data();
+        final donorname = donorData?['fullName'];
+        final donoremail = donorData?['email'];
+        final donorphone = donorData?['phone'];
+
+        Nav.push(
+          context,
+          DonorTabBarView(
+            username: donorname ?? "null",
+            useremail: donoremail ?? "null",
+            userphone: donorphone ?? "null",
+          ),
+        );
         return;
       }
 

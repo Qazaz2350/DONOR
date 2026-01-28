@@ -49,6 +49,10 @@ dependencies:
   shimmer:
   rename_app: ^1.6.5  
   introduction_screen: 
+  google_maps_flutter:
+  geolocator:
+  geocoding:
+  table_calendar:
   
 
 dev_dependencies:

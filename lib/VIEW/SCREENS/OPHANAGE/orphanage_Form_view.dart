@@ -120,10 +120,43 @@ class OrphanageSignupView extends StatelessWidget {
                         ),
                         const SizedBox(height: 24),
 
+                        // Location Section
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.my_location),
+                                label: Text(
+                                  vm.isLocationLoading
+                                      ? 'Fetching...'
+                                      : 'Get Current Location',
+                                ),
+                                onPressed: vm.isLocationLoading
+                                    ? null
+                                    : () async {
+                                        await vm.fetchLiveLocation(context);
+                                      },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        if (vm.latitude != null && vm.longitude != null)
+                          Text(
+                            'Latitude: ${vm.latitude}, Longitude: ${vm.longitude}',
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        const SizedBox(height: 24),
+
                         // Submit Button
                         ElevatedButton(
                           onPressed: () async {
                             if (!vm.validateForm()) return;
+
+                            // Optional: attach location before submission
+                            if (vm.latitude != null && vm.longitude != null) {
+                              // You can modify your submitOrphanage method to accept lat/lng
+                            }
 
                             await vm.submitOrphanage(context);
 

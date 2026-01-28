@@ -1,12 +1,24 @@
 import 'package:donate/UTILIS/app_colors.dart';
 import 'package:donate/Utilis/app_fonts.dart';
 import 'package:donate/Utilis/extention.dart';
+import 'package:donate/VIEWMODEL/SCREENS/SENDER/donor_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 
 class DonationPageView extends StatefulWidget {
-  final String orphanage_name;
-  const DonationPageView({super.key, required this.orphanage_name});
+  final String username;
+  final String useremail;
+  final String userphone;
+  final Map<String, dynamic> orphanagedata;
+
+  const DonationPageView({
+    super.key,
+    required this.orphanagedata,
+    required this.username,
+    required this.useremail,
+    required this.userphone,
+  });
 
   @override
   State<DonationPageView> createState() => _DonationPageViewState();
@@ -30,57 +42,51 @@ class _DonationPageViewState extends State<DonationPageView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.colors.background,
-      appBar: AppBar(
-        title: Text(
-          'Make a Donation',
-          style: TextStyle(
-            fontSize: FontSizes.f20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20.sp),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: _buildUI(context),
-    );
-  }
+    return ChangeNotifierProvider(
+      create: (_) => DonorViewModel(),
+      child: Consumer<DonorViewModel>(
+        builder: (context, vm, child) {
+          return Scaffold(
+            backgroundColor: context.colors.background,
+            appBar: AppBar(
+              title: Text(
+                'Make a Donation',
+                style: TextStyle(
+                  fontSize: FontSizes.f20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20.sp),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
 
-  void _processPayment() async {
-    double amount = double.tryParse(amountController.text) ?? 0;
-
-    if (amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Enter a valid amount'),
-          backgroundColor: Colors.red.shade400,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-        ),
-      );
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Payment Successful! Amount: \$${amount.toStringAsFixed(2)}',
-        ),
-        backgroundColor: AppColors.secondary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
-        ),
+            body: SingleChildScrollView(
+              padding: EdgeInsets.all(20.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _orphanageCard(),
+                  SizedBox(height: 32.h),
+                  _donationTypeSelector(),
+                  SizedBox(height: 32.h),
+                  _buildCustomFields(),
+                  SizedBox(height: 32.h),
+                  _donateButton(),
+                  SizedBox(height: 20.h),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
+
+  // ================= UI WIDGETS (NO CHANGE) =================
 
   IconData _getCategoryIcon(String category) {
     final icons = {
@@ -186,268 +192,184 @@ class _DonationPageViewState extends State<DonationPageView> {
     );
   }
 
-  // ✅ UI SEPARATED HERE — NOTHING INSIDE CHANGED
-  Widget _buildUI(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(20.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  // ================= SEPARATED UI WIDGETS =================
+
+  Widget _orphanageCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(10.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary, AppColors.blue],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20.r),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 20,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
         children: [
-          // Orphanage Card
           Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(10.w),
+            padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.blue],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20.r),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: Offset(0, 10),
-                ),
-              ],
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12.r),
             ),
-            child: Row(
+            child: Icon(
+              Icons.favorite_rounded,
+              color: Colors.white,
+              size: 20.sp,
+            ),
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Icon(
-                    Icons.favorite_rounded,
-                    color: Colors.white,
-                    size: 20.sp,
+                Text(
+                  'Donating to',
+                  style: TextStyle(
+                    fontSize: FontSizes.f12,
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Donating to',
-                        style: TextStyle(
-                          fontSize: FontSizes.f12,
-                          color: Colors.white70,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        widget.orphanage_name,
-                        style: TextStyle(
-                          fontSize: FontSizes.f16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                SizedBox(height: 4.h),
+                Text(
+                  widget.orphanagedata['orphanagename'] ??
+                      widget.orphanagedata['name'] ??
+                      'No Name',
+                  style: TextStyle(
+                    fontSize: FontSizes.f16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
           ),
-          SizedBox(height: 32.h),
+        ],
+      ),
+    );
+  }
 
-          Text(
-            'Select Donation Type',
-            style: TextStyle(
-              fontSize: FontSizes.f16,
-              fontWeight: FontWeight.bold,
-              color: context.colors.onSurface,
-            ),
+  Widget _donationTypeSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Select Donation Type',
+          style: TextStyle(
+            fontSize: FontSizes.f16,
+            fontWeight: FontWeight.bold,
+            color: context.colors.onSurface,
           ),
-          SizedBox(height: 16.h),
-
-          Wrap(
-            spacing: 10.w,
-            runSpacing: 12.h,
-            children: ['Money', 'Food', 'Clothes', 'Books', 'Toys'].map((type) {
-              bool selected = selectedCategory == type;
-              return InkWell(
-                onTap: () {
-                  setState(() {
-                    selectedCategory = type;
-                  });
-                },
-                borderRadius: BorderRadius.circular(16.r),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 13.w,
-                    vertical: 14.h,
+        ),
+        SizedBox(height: 16.h),
+        Wrap(
+          spacing: 10.w,
+          runSpacing: 12.h,
+          children: ['Money', 'Food', 'Clothes', 'Books', 'Toys'].map((type) {
+            bool selected = selectedCategory == type;
+            return InkWell(
+              onTap: () {
+                setState(() {
+                  selectedCategory = type;
+                });
+              },
+              borderRadius: BorderRadius.circular(16.r),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 14.h),
+                decoration: BoxDecoration(
+                  color: selected ? AppColors.primary : context.colors.surface,
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(
+                    color: selected ? AppColors.primary : Colors.grey.shade300,
+                    width: selected ? 2 : 1,
                   ),
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? AppColors.primary
-                        : context.colors.surface,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: selected
-                          ? AppColors.primary
-                          : Colors.grey.shade300,
-                      width: selected ? 2 : 1,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _getCategoryIcon(type),
+                      color: selected ? Colors.white : context.colors.onSurface,
+                      size: 20.sp,
                     ),
-                    boxShadow: selected
-                        ? [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
-                              blurRadius: 12,
-                              offset: Offset(0, 4),
-                            ),
-                          ]
-                        : [],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _getCategoryIcon(type),
+                    SizedBox(width: 8.w),
+                    Text(
+                      type,
+                      style: TextStyle(
+                        fontSize: FontSizes.f14,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                         color: selected
                             ? Colors.white
                             : context.colors.onSurface,
-                        size: 20.sp,
                       ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        type,
-                        style: TextStyle(
-                          fontSize: FontSizes.f14,
-                          fontWeight: selected
-                              ? FontWeight.w600
-                              : FontWeight.w500,
-                          color: selected
-                              ? Colors.white
-                              : context.colors.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-
-          SizedBox(height: 32.h),
-          _buildCustomFields(),
-          SizedBox(height: 32.h),
-
-          // Container(
-          //   padding: EdgeInsets.all(20.w),
-          //   decoration: BoxDecoration(
-          //     color: context.colors.surface,
-          //     borderRadius: BorderRadius.circular(16.r),
-          //     border: Border.all(color: Colors.grey.shade300, width: 1),
-          //   ),
-          //   child: Row(
-          //     children: [
-          //       Container(
-          //         padding: EdgeInsets.all(10.w),
-          //         decoration: BoxDecoration(
-          //           color: AppColors.secondary.withOpacity(0.1),
-          //           borderRadius: BorderRadius.circular(12.r),
-          //         ),
-          //         child: Icon(
-          //           Icons.autorenew_rounded,
-          //           color: AppColors.secondary,
-          //           size: 24.sp,
-          //         ),
-          //       ),
-          //       SizedBox(width: 16.w),
-          //       Expanded(
-          //         child: Column(
-          //           crossAxisAlignment: CrossAxisAlignment.start,
-          //           children: [
-          //             Text(
-          //               'Recurring Donation',
-          //               style: TextStyle(
-          //                 fontSize: FontSizes.f14,
-          //                 fontWeight: FontWeight.w600,
-          //                 color: context.colors.onSurface,
-          //               ),
-          //             ),
-          //             SizedBox(height: 4.h),
-          //             Text(
-          //               'Make this a monthly donation',
-          //               style: TextStyle(
-          //                 fontSize: FontSizes.f12,
-          //                 color: Colors.grey.shade600,
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //       ),
-          //       Switch(
-          //         value: isRecurring,
-          //         onChanged: (val) {
-          //           setState(() {
-          //             isRecurring = val;
-          //           });
-          //         },
-          //         activeColor: AppColors.secondary,
-          //       ),
-          //     ],
-          //   ),
-          // ),
-
-          // SizedBox(height: 40.h),
-          Container(
-            width: double.infinity,
-            height: 56.h,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.blue],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-              borderRadius: BorderRadius.circular(16.r),
-              // boxShadow: [
-              //   BoxShadow(
-              //     color: AppColors.primary.withOpacity(0.4),
-              //     blurRadius: 20,
-              //     offset: Offset(0, 10),
-              //   ),
-              // ],
-            ),
-            child: ElevatedButton(
-              onPressed: _processPayment,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.favorite_rounded,
-                    color: Colors.white,
-                    size: 20.sp,
-                  ),
-                  SizedBox(width: 12.w),
-                  Text(
-                    'Donate Now',
-                    style: TextStyle(
-                      fontSize: FontSizes.f16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _donateButton() {
+    return Container(
+      width: double.infinity,
+      height: 56.h,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [AppColors.primary, AppColors.blue]),
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: ElevatedButton(
+        onPressed: () {
+          context.read<DonorViewModel>().handleDonateButton(
+            context: context,
+            name: widget.username,
+            email: widget.useremail,
+            phone: widget.userphone,
+            orphanageData: widget.orphanagedata,
+            category: selectedCategory,
+            amountController: amountController,
+            quantityController: quantityController,
+            notesController: notesController,
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.favorite_rounded, color: Colors.white, size: 20.sp),
+            SizedBox(width: 12.w),
+            Text(
+              'Donate Now',
+              style: TextStyle(
+                fontSize: FontSizes.f16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
-          ),
-          SizedBox(height: 20.h),
-        ],
+          ],
+        ),
       ),
     );
   }

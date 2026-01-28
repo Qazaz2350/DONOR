@@ -1,3 +1,4 @@
+import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanagehome/orphanage_home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:donate/VIEWMODEL/SCREENS/ORPHANAGE/orphanage_view_model.dart';
@@ -21,7 +22,7 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() => setState(() {}));
   }
 
@@ -56,10 +57,17 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
               controller: _tabController,
               children: [
                 // Home tab simplified
+                Text("home"),
+                OrphanageHomeView(),
+
+                // Create Request
+                OrphanageRequestView(),
+
+                // Profile
                 SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    'Welcome, ${vm.nameController.text.isEmpty ? 'Orphanage' : vm.nameController.text}!',
+                    'Welcome, ${vm.nameController.text.isEmpty ? '*profile' : vm.nameController.text}!',
                     style: TextStyle(
                       fontSize: FontSizes.f16,
                       fontWeight: FontWeight.bold,
@@ -67,11 +75,10 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
                   ),
                 ),
 
-                // Create Request
-                OrphanageRequestView(),
-
-                // Profile / Signup
-                // OrphanageFormView(),
+                //call
+                // Text(
+                //   'Welcome, ${vm.nameController.text.isEmpty ? 'Call' : vm.nameController.text}!',
+                // ),
               ],
             ),
             bottomNavigationBar: Material(
@@ -82,9 +89,14 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
                 labelColor: Colors.white,
                 unselectedLabelColor: Colors.white70,
                 tabs: const [
-                  Tab(icon: Icon(Icons.dashboard), text: 'Home'),
+                  Tab(icon: Icon(Icons.home), text: 'Home'),
+                  Tab(icon: Icon(Icons.dashboard), text: 'call request'),
                   Tab(icon: Icon(Icons.add_box), text: 'Create'),
                   Tab(icon: Icon(Icons.person), text: 'Profile'),
+                  // Tab(
+                  //   icon: Icon(Icons.remove_from_queue_sharp),
+                  //   text: 'Call Requests',
+                  // ),
                 ],
               ),
             ),

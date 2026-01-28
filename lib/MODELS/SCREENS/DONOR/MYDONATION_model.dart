@@ -1,33 +1,32 @@
-class Donation {
-  final String type; // Money, Food, Clothes, Books, Toys
-  final String orphanageName;
-  final double? amount; // only for Money type
-  final String status; // Pending, Shipped, Delivered
-  final DateTime date;
+//
+class DonationModel {
+  final String foundationId;
+  final String foundationName;
+  final String category;
+  final double? amount;
+  final int? quantity;
+  final String notes;
+  final DateTime timestamp;
 
-  Donation({
-    required this.type,
-    required this.orphanageName,
+  DonationModel({
+    required this.foundationId,
+    required this.foundationName,
+    required this.category,
     this.amount,
-    required this.status,
-    required this.date,
+    this.quantity,
+    required this.notes,
+    required this.timestamp,
   });
-}
 
-// WISH WALL MODEL
-
-class WishModel {
-  final String id;
-  final String childName;
-  final String wishTitle;
-  final String description;
-  final bool isFulfilled;
-
-  WishModel({
-    required this.id,
-    required this.childName,
-    required this.wishTitle,
-    required this.description,
-    required this.isFulfilled,
-  });
+  Map<String, dynamic> toMap() {
+    return {
+      'foundationId': foundationId,
+      'foundationName': foundationName,
+      'category': category,
+      'amount': amount,
+      'quantity': quantity,
+      'notes': notes,
+      'timestamp': timestamp,
+    };
+  }
 }

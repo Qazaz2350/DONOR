@@ -1,15 +1,24 @@
-import 'package:donate/TESTING.dart';
 import 'package:donate/UTILIS/app_colors.dart';
 import 'package:donate/Utilis/app_fonts.dart';
 import 'package:donate/Utilis/extention.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/HOME/Home_view.dart';
+import 'package:donate/VIEW/SCREENS/DONOR/VIDEOCALL/videocall_history_view.dart';
 import 'package:donate/VIEWMODEL/SCREENS/SENDER/donor_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 class DonorTabBarView extends StatefulWidget {
-  const DonorTabBarView({Key? key}) : super(key: key);
+  final String username;
+  final String useremail;
+  final String userphone;
+
+  const DonorTabBarView({
+    Key? key,
+    required this.username,
+    required this.useremail,
+    required this.userphone,
+  }) : super(key: key);
 
   @override
   State<DonorTabBarView> createState() => _DonorTabBarViewState();
@@ -71,7 +80,7 @@ class _DonorTabBarViewState extends State<DonorTabBarView>
                           ),
                         ),
                         Text(
-                          'QAZAZ AHSAN',
+                          widget.username,
                           style: TextStyle(
                             fontSize: FontSizes.f16,
                             fontWeight: FontWeight.bold,
@@ -115,11 +124,22 @@ class _DonorTabBarViewState extends State<DonorTabBarView>
                     controller: _tabController,
                     physics: const NeverScrollableScrollPhysics(),
                     children: [
-                      HomeView(),
-                      // testing(),
-                      // donations
-                      // DonationHistoryPage(vm: vm),
-                      // WishCard(),
+                      HomeView(
+                        username: widget.username,
+                        useremail: widget.useremail,
+                        userphone: widget.userphone,
+                      ),
+                      Center(
+                        child: Text(
+                          'Donations Screen',
+                          style: TextStyle(
+                            fontSize: FontSizes.f16,
+                            fontWeight: FontWeight.bold,
+                            color: context.colors.onSurface,
+                          ),
+                        ),
+                      ),
+                      VideoCallRequestsUI(),
                       Center(
                         child: Text(
                           'Story Feed Screen',
@@ -178,7 +198,7 @@ class _DonorTabBarViewState extends State<DonorTabBarView>
                           AssetImage('assets/icons/event.png'),
                           size: 24.sp,
                         ),
-                        text: 'Events',
+                        text: 'Video Call',
                       ),
                       Tab(
                         icon: ImageIcon(
