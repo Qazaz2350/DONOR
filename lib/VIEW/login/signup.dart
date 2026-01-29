@@ -79,7 +79,7 @@ class SignUpScreenView extends StatelessWidget {
 
                       // User Type Dropdown
                       DropdownButtonFormField<String>(
-                        value: vm.userType, // this will come from ViewModel
+                        initialValue: vm.userType, // this will come from ViewModel
                         items: const [
                           DropdownMenuItem(
                             value: 'donor',

@@ -3,6 +3,7 @@ import 'package:donate/Utilis/app_fonts.dart';
 import 'package:donate/Utilis/extention.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/HOME/Home_view.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/VIDEOCALL/videocall_history_view.dart';
+import 'package:donate/VIEW/SCREENS/DONOR/donation/donation_history_view.dart';
 import 'package:donate/VIEWMODEL/SCREENS/SENDER/donor_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -129,16 +130,7 @@ class _DonorTabBarViewState extends State<DonorTabBarView>
                         useremail: widget.useremail,
                         userphone: widget.userphone,
                       ),
-                      Center(
-                        child: Text(
-                          'Donations Screen',
-                          style: TextStyle(
-                            fontSize: FontSizes.f16,
-                            fontWeight: FontWeight.bold,
-                            color: context.colors.onSurface,
-                          ),
-                        ),
-                      ),
+                      DonationHistoryView(),
                       VideoCallRequestsUI(),
                       Center(
                         child: Text(

@@ -15,21 +15,34 @@ class DonationService {
 
     final snapshot = await docRef.get();
 
+    // Prepare the donation map with all fields
+    final donationMap = {
+      'foundationId': donation.foundationId,
+      'foundationName': donation.foundationName,
+      'category': donation.category,
+      'amount': donation.amount,
+      'quantity': donation.quantity,
+      'notes': donation.notes,
+      'timestamp': donation.timestamp,
+    };
+
     if (snapshot.exists) {
       // 🟢 User already exists → update same doc
       await docRef.update({
+        'userId': userId,
         'donorname': name,
         'donoremail': email,
         'donorphone': phone,
-        'donations': FieldValue.arrayUnion([donation.toMap()]),
+        'donations': FieldValue.arrayUnion([donationMap]),
       });
     } else {
       // 🔵 New user → create new doc
       await docRef.set({
+        'userId': userId,
         'donorname': name,
         'donoremail': email,
         'donorphone': phone,
-        'donations': [donation.toMap()],
+        'donations': [donationMap],
       });
     }
   }

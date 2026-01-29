@@ -47,7 +47,7 @@ class _HomeViewState extends State<HomeView>
       child: Consumer<DonorViewModel>(
         builder: (context, vm, child) {
           return Scaffold(
-            backgroundColor: context.colors.background,
+            backgroundColor: context.colors.surface,
             drawer: AppDrawer(),
             body: SingleChildScrollView(
               child: Column(

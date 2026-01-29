@@ -53,6 +53,7 @@ dependencies:
   geolocator:
   geocoding:
   table_calendar:
+  # zego_uikit_prebuilt_call: ^4.22.2
   
 
 dev_dependencies:

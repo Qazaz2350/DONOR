@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:donate/Utilis/app_colors.dart';
 import 'package:donate/VIEWMODEL/SCREENS/SENDER/donor_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -32,15 +33,16 @@ class VideoCallRequestsUI extends StatelessWidget {
                       final requestTime = item['requestTime'] != null
                           ? (item['requestTime'] as Timestamp).toDate()
                           : null;
-
                       final scheduledTime = item['scheduledTime'] != null
                           ? (item['scheduledTime'] as Timestamp).toDate()
                           : null;
 
+                      final status = (item['videocallstatus'] ?? 'pending')
+                          .toLowerCase();
+
                       Color statusColor;
-                      switch ((item['videocallstatus'] ?? 'pending')
-                          .toLowerCase()) {
-                        case 'approved':
+                      switch (status) {
+                        case 'accepted':
                           statusColor = Colors.green;
                           break;
                         case 'rejected':
@@ -62,6 +64,7 @@ class VideoCallRequestsUI extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // ===== Header =====
                               Row(
                                 children: [
                                   const Icon(
@@ -88,8 +91,7 @@ class VideoCallRequestsUI extends StatelessWidget {
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
-                                      (item['videocallstatus'] ?? 'pending')
-                                          .toUpperCase(),
+                                      status.toUpperCase(),
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
@@ -100,6 +102,7 @@ class VideoCallRequestsUI extends StatelessWidget {
                                 ],
                               ),
                               const SizedBox(height: 12),
+                              // ===== Request & Scheduled Time =====
                               Row(
                                 children: [
                                   const Icon(
@@ -135,6 +138,27 @@ class VideoCallRequestsUI extends StatelessWidget {
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: 12),
+                              // ===== Action Buttons =====
+                              if (status == 'pending')
+                                Row(children: [const SizedBox(width: 8)])
+                              else if (status == 'accepted')
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    print(
+                                      'Start video call with ${item['orphanageName']}',
+                                    );
+                                  },
+                                  icon: const Icon(Icons.video_call),
+                                  label: const Text(
+                                    'Start Video Call',
+                                    style: TextStyle(color: AppColors.white),
+                                  ),
+
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue,
+                                  ),
+                                ),
                             ],
                           ),
                         ),

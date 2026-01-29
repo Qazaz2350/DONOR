@@ -26,45 +26,76 @@ class VideoCallScheduleUI extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => DonorViewModel(),
       child: Consumer<DonorViewModel>(
-        builder: (context, vm, child) => Scaffold(
-          appBar: AppBar(title: const Text('Schedule Video Call')),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        builder: (context, vm, child) => DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text('Schedule Video Call'),
+              bottom: const TabBar(
+                tabs: [
+                  Tab(text: 'Schedule'),
+                  Tab(text: 'Video Call'),
+                ],
+              ),
+            ),
+            body: TabBarView(
               children: [
-                _calendar(vm),
-                const SizedBox(height: 12),
-                _selectedDateView(vm),
-                const SizedBox(height: 24),
-                _timeField(context, vm),
-                const SizedBox(height: 40),
-                ElevatedButton(
-                  onPressed: () {
-                    vm.submitVideoCall(
-                      context: context,
-                      orphanageData: orphanage,
-                      donorName: username,
-                      donorPhone: userphone,
-                      donorEmail: useremail,
-                    );
-                  },
-                  child: const Text('Request Video Call'),
-                ),
-                Text(
-                  orphanage['orphanagename'] ?? orphanage['name'] ?? 'No Name',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 26.sp,
-                    fontWeight: FontWeight.bold,
-                    color: context.colors.onSurface,
-                    letterSpacing: 0.3,
-                    height: 1.2,
+                // Tab 1: Your existing scroll view
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _calendar(vm),
+                      const SizedBox(height: 12),
+                      _selectedDateView(vm),
+                      const SizedBox(height: 24),
+                      _timeField(context, vm),
+                      const SizedBox(height: 40),
+                      ElevatedButton(
+                        onPressed: () {
+                          vm.submitVideoCall(
+                            context: context,
+                            orphanageData: orphanage,
+                            donorName: username,
+                            donorPhone: userphone,
+                            donorEmail: useremail,
+                          );
+                        },
+                        child: const Text('Request Video Call'),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        orphanage['orphanagename'] ??
+                            orphanage['name'] ??
+                            'No Name',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 26.sp,
+                          fontWeight: FontWeight.bold,
+                          color: context.colors.onSurface,
+                          letterSpacing: 0.3,
+                          height: 1.2,
+                        ),
+                      ),
+                      Text(useremail),
+                      Text(username),
+                      Text(userphone),
+                    ],
                   ),
                 ),
-                Text(useremail),
-                Text(username),
-                Text(userphone),
+
+                // Tab 2: Simple text
+                Center(
+                  child: Text(
+                    'Video Call',
+                    style: TextStyle(
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.bold,
+                      color: context.colors.onSurface,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -80,7 +111,7 @@ class VideoCallScheduleUI extends StatelessWidget {
       focusedDay: vm.focusedDay,
       selectedDayPredicate: (day) => isSameDay(vm.selectedDay, day),
       calendarFormat: CalendarFormat.month,
-      onDaySelected: vm.onDateSelected, // updates VM directly
+      onDaySelected: vm.onDateSelected,
       headerStyle: const HeaderStyle(
         formatButtonVisible: false,
         titleCentered: true,
@@ -126,9 +157,9 @@ class VideoCallScheduleUI extends StatelessWidget {
           initialTime: TimeOfDay.now(),
         );
         if (picked != null) {
-          vm.selectedTime = picked; // update VM
+          vm.selectedTime = picked;
           vm.timeController.text = picked.format(context);
-          vm.notifyListeners(); // rebuild UI
+          vm.notifyListeners();
         }
       },
     );

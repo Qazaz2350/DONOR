@@ -1,4 +1,6 @@
 //
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class DonationModel {
   final String foundationId;
   final String foundationName;
@@ -28,5 +30,17 @@ class DonationModel {
       'notes': notes,
       'timestamp': timestamp,
     };
+  }
+
+  factory DonationModel.fromMap(Map<String, dynamic> map) {
+    return DonationModel(
+      foundationId: map['foundationId'] ?? '',
+      foundationName: map['foundationName'] ?? '',
+      category: map['category'] ?? '',
+      amount: (map['amount'] as num?)?.toDouble(),
+      quantity: (map['quantity'] as num?)?.toInt(),
+      notes: map['notes'] ?? '',
+      timestamp: (map['timestamp'] as Timestamp).toDate(),
+    );
   }
 }

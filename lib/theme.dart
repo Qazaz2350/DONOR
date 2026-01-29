@@ -13,12 +13,10 @@ class AppTheme {
     colorScheme: const ColorScheme.light(
       primary: AppColors.primary,
       secondary: AppColors.secondary,
-      surface: AppColors.white, // card background
-      background: AppColors.white, // scaffold background
+      surface: AppColors.white, // scaffold background
       onPrimary: AppColors.white,
       onSecondary: AppColors.black,
       onSurface: AppColors.black,
-      onBackground: AppColors.black,
     ),
 
     scaffoldBackgroundColor: AppColors.white,
@@ -54,12 +52,10 @@ class AppTheme {
     colorScheme: const ColorScheme.dark(
       primary: AppColors.primary,
       secondary: AppColors.secondary,
-      surface: AppColors.black, // Cards / Containers
-      background: AppColors.black, // general background
+      surface: AppColors.black, // general background
       onPrimary: AppColors.white,
       onSecondary: AppColors.white,
       onSurface: AppColors.white,
-      onBackground: AppColors.white,
     ),
 
     appBarTheme: AppBarTheme(

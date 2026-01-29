@@ -38,7 +38,7 @@ class OrphanageFoundationDetail extends StatelessWidget {
     final eventsList = (orphanage['volunteeringEvents'] ?? []) as List<dynamic>;
 
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: context.colors.surface,
       body: Stack(
         children: [
           CustomScrollView(
@@ -170,7 +170,7 @@ class OrphanageFoundationDetail extends StatelessWidget {
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.transparent,
-                                context.colors.background,
+                                context.colors.surface,
                               ],
                             ),
                           ),
@@ -757,9 +757,9 @@ class OrphanageFoundationDetail extends StatelessWidget {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    context.colors.background,
-                    context.colors.background.withOpacity(0.95),
-                    context.colors.background.withOpacity(0),
+                    context.colors.surface,
+                    context.colors.surface.withOpacity(0.95),
+                    context.colors.surface.withOpacity(0),
                   ],
                 ),
               ),

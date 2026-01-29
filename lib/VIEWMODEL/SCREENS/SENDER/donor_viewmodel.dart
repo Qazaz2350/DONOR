@@ -70,7 +70,6 @@ class DonorViewModel extends ChangeNotifier {
   /// ---------------------------
   /// DONATION LOGIC
   /// ---------------------------
-
   Future<void> donateNow({
     required String userId,
     required String name,
@@ -82,6 +81,7 @@ class DonorViewModel extends ChangeNotifier {
     required String quantity,
     required String notes,
   }) async {
+    // Prepare the donation model with all fields
     final donation = DonationModel(
       foundationId: orphanageData['uid'] ?? '',
       foundationName:
@@ -93,6 +93,7 @@ class DonorViewModel extends ChangeNotifier {
       timestamp: DateTime.now(),
     );
 
+    // Call service to save donation
     await DonationService().addDonation(
       userId: userId,
       name: name,
@@ -105,7 +106,6 @@ class DonorViewModel extends ChangeNotifier {
   /// ---------------------------
   /// BUTTON HANDLER
   /// ---------------------------
-
   Future<void> handleDonateButton({
     required BuildContext context,
     required String name,
@@ -127,6 +127,7 @@ class DonorViewModel extends ChangeNotifier {
         return;
       }
 
+      // Validate inputs
       if (category == 'Money') {
         final amount = double.tryParse(amountController.text) ?? 0;
         if (amount <= 0) {
@@ -136,14 +137,16 @@ class DonorViewModel extends ChangeNotifier {
           return;
         }
       } else {
-        if (quantityController.text.isEmpty) {
+        if (quantityController.text.isEmpty ||
+            int.tryParse(quantityController.text) == null) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('Enter quantity')));
+          ).showSnackBar(const SnackBar(content: Text('Enter valid quantity')));
           return;
         }
       }
 
+      // Save donation
       await donateNow(
         userId: user.uid,
         name: name,
@@ -156,10 +159,12 @@ class DonorViewModel extends ChangeNotifier {
         notes: notesController.text,
       );
 
+      // Clear controllers
       amountController.clear();
       quantityController.clear();
       notesController.clear();
 
+      // Success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Donation Successful'),
@@ -184,6 +189,7 @@ class DonorViewModel extends ChangeNotifier {
     focusedDay = focused;
     notifyListeners();
   }
+
   // ===== Submit Video Call Request =====
   Future<void> submitVideoCall({
     required BuildContext context,
@@ -202,6 +208,9 @@ class DonorViewModel extends ChangeNotifier {
       return;
     }
 
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
     final scheduledDateTime = DateTime(
       selectedDay!.year,
       selectedDay!.month,
@@ -210,14 +219,22 @@ class DonorViewModel extends ChangeNotifier {
       selectedTime!.minute,
     );
 
+    /// 🔹 Unique & SAME callID for both users
+    final callID = "${user.uid}_${orphanageData['uid']}";
+
     try {
-      await _donationService.addVideoCallRequest(
-        scheduledDateTime: scheduledDateTime,
-        orphanageName: orphanageName,
-        donorName: donorName,
-        donorPhone: donorPhone,
-        donorEmail: donorEmail,
-      );
+      await _firestore.collection('videocallrequest').add({
+        'callID': callID,
+        'donorID': user.uid,
+        'orphanageID': orphanageData['uid'],
+        'orphanageName': orphanageName,
+        'donorName': donorName,
+        'donorPhone': donorPhone,
+        'donorEmail': donorEmail,
+        'scheduledTime': Timestamp.fromDate(scheduledDateTime),
+        'requestTime': FieldValue.serverTimestamp(),
+        'videocallstatus': 'pending',
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Video call request sent successfully')),
@@ -231,6 +248,29 @@ class DonorViewModel extends ChangeNotifier {
     }
   }
 
+  // video start button
+  // Future<void> logCallStart(String docID) async {
+  //   await _firestore.collection('videocallrequest').doc(docID).update({
+  //     'callStartedAt': FieldValue.serverTimestamp(),
+  //     'callStatus': 'ongoing',
+  //   });
+  // }
+
+  //call end
+
+  // Future<void> logCallEnd(String docID, DateTime startTime) async {
+  //   final endTime = DateTime.now();
+  //   final duration = endTime.difference(startTime).inSeconds;
+
+  //   await _firestore.collection('videocallrequest').doc(docID).update({
+  //     'callEndedAt': FieldValue.serverTimestamp(),
+  //     'callDuration': duration,
+  //     'callStatus': 'ended',
+  //   });
+  // }
+
+  // start video call
+
   List<Map<String, dynamic>> videoCallRequests = [];
   bool isFetchingVideoCalls = false;
 
@@ -240,14 +280,15 @@ class DonorViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      QuerySnapshot snapshot = await _firestore
+      final snapshot = await _firestore
           .collection('videocallrequest')
           .orderBy('requestTime', descending: true)
           .get();
 
+      // Convert Firestore documents to a list of maps
       videoCallRequests = snapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        data['id'] = doc.id;
+        final data = doc.data();
+        data['id'] = doc.id; // store doc ID for reference
         return data;
       }).toList();
     } catch (e) {
@@ -256,5 +297,154 @@ class DonorViewModel extends ChangeNotifier {
 
     isFetchingVideoCalls = false;
     notifyListeners();
+  }
+
+  /// ---------------------------
+  /// FETCH USER DONATIONS FROM FIRESTORE
+  ///
+  List<DonationModel> userDonations = [];
+  bool isFetchingDonations = false;
+  String? donationError;
+
+  /// ---------------------------
+  /// FETCH USER DONATIONS FROM FIRESTORE
+  /// ---------------------------
+  Future<void> fetchUserDonations() async {
+    isFetchingDonations = true;
+    notifyListeners();
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        donationError = 'User not logged in';
+        return;
+      }
+
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('donations')
+          .doc(user.uid)
+          .get();
+
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data()!;
+        final List<dynamic> donationsArray = data['donations'] ?? [];
+
+        // Convert each map in the array to DonationModel
+        userDonations = donationsArray.map((donationMap) {
+          return DonationModel.fromMap(Map<String, dynamic>.from(donationMap));
+        }).toList();
+
+        donationError = null;
+      } else {
+        // No document exists for this user
+        userDonations = [];
+        donationError = null;
+      }
+
+      // Optional: print for debug
+      // for (var d in userDonations) {
+      //   print('------------------------');
+      //   print('Foundation: ${d.foundationName}');
+      //   print('Category: ${d.category}');
+      //   print('Amount: ${d.amount}');
+      //   print('Quantity: ${d.quantity}');
+      //   print('Notes: ${d.notes}');
+      //   print('Time: ${d.timestamp}');
+      // }
+    } catch (e) {
+      donationError = e.toString();
+      debugPrint('Error fetching donations: $e');
+    } finally {
+      isFetchingDonations = false;
+      notifyListeners();
+    }
+  }
+  // ======================
+  // KIND DNA PROFILE / BADGE SYSTEM
+  // ======================
+
+  // XP, Rank & Badges
+  int _xp = 0;
+  String _rank = 'Beginner';
+  List<String> _badges = [];
+
+  int get xp => _xp;
+  String get rank => _rank;
+  List<String> get badges => _badges;
+
+  /// ---------------------------
+  /// CALCULATE BADGES & RANK
+  /// ---------------------------
+  void calculateBadges() {
+    _xp = 0;
+    _badges = [];
+
+    for (var donation in userDonations) {
+      // XP based on donation type
+      if (donation.category == 'Money' && donation.amount != null) {
+        _xp += (donation.amount! / 10).round() * 2; // 2 XP per $10
+      } else if (donation.quantity != null) {
+        _xp += donation.quantity! * 5; // 5 XP per item
+      }
+
+      // Badges based on category
+      if (donation.category == 'Toys' && !_badges.contains('Toy Giver')) {
+        _badges.add('Toy Giver');
+      }
+      if (donation.category == 'Education' &&
+          !_badges.contains('Education Sponsor')) {
+        _badges.add('Education Sponsor');
+      }
+      if (donation.category == 'Money' && !_badges.contains('Philanthropist')) {
+        _badges.add('Philanthropist');
+      }
+    }
+
+    // Frequency-based badges
+    if (userDonations.length >= 5 && !_badges.contains('Regular Donor')) {
+      _badges.add('Regular Donor');
+    }
+    if (userDonations.length >= 10 && !_badges.contains('Hero Donor')) {
+      _badges.add('Hero Donor');
+    }
+
+    // Assign rank based on XP
+    if (_xp >= 500) {
+      _rank = 'Champion';
+    } else if (_xp >= 250) {
+      _rank = 'Advanced';
+    } else if (_xp >= 100) {
+      _rank = 'Intermediate';
+    } else {
+      _rank = 'Beginner';
+    }
+
+    notifyListeners();
+  }
+
+  /// ---------------------------
+  /// SAVE BADGES & RANK TO FIRESTORE
+  /// ---------------------------
+  Future<void> saveBadgesToFirebase() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      await _firestore.collection('donations').doc(user.uid).update({
+        'xp': _xp,
+        'rank': _rank,
+        'badges': _badges,
+      });
+    } catch (e) {
+      debugPrint('Error saving badges: $e');
+    }
+  }
+
+  /// ---------------------------
+  /// REFRESH BADGES AFTER FETCHING DONATIONS
+  /// ---------------------------
+  Future<void> updateBadges() async {
+    calculateBadges();
+    await saveBadgesToFirebase();
   }
 }

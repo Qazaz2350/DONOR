@@ -47,7 +47,7 @@ class _DonationPageViewState extends State<DonationPageView> {
       child: Consumer<DonorViewModel>(
         builder: (context, vm, child) {
           return Scaffold(
-            backgroundColor: context.colors.background,
+            backgroundColor: context.colors.surface,
             appBar: AppBar(
               title: Text(
                 'Make a Donation',
