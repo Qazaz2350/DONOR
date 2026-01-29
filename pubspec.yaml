@@ -54,6 +54,8 @@ dependencies:
   geocoding:
   table_calendar:
   # zego_uikit_prebuilt_call: ^4.22.2
+  confetti:
+  # ImageFilter:
   
 
 dev_dependencies:

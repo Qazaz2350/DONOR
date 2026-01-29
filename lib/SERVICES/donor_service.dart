@@ -4,6 +4,7 @@ import 'package:donate/MODELS/SCREENS/DONOR/MYDONATION_model.dart';
 class DonationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// Add a donation to Firestore
   Future<void> addDonation({
     required String userId,
     required String name,
@@ -12,63 +13,81 @@ class DonationService {
     required DonationModel donation,
   }) async {
     final docRef = _firestore.collection('donations').doc(userId);
-
     final snapshot = await docRef.get();
 
-    // Prepare the donation map with all fields
-    final donationMap = {
-      'foundationId': donation.foundationId,
-      'foundationName': donation.foundationName,
-      'category': donation.category,
-      'amount': donation.amount,
-      'quantity': donation.quantity,
-      'notes': donation.notes,
-      'timestamp': donation.timestamp,
-    };
+    final donationMap = donation.toMap();
 
     if (snapshot.exists) {
-      // 🟢 User already exists → update same doc
+      // Append donation to existing document
       await docRef.update({
-        'userId': userId,
         'donorname': name,
         'donoremail': email,
         'donorphone': phone,
         'donations': FieldValue.arrayUnion([donationMap]),
+        'lastUpdated': FieldValue.serverTimestamp(),
       });
     } else {
-      // 🔵 New user → create new doc
+      // Create a new document for this user
       await docRef.set({
         'userId': userId,
         'donorname': name,
         'donoremail': email,
         'donorphone': phone,
         'donations': [donationMap],
+        'createdAt': FieldValue.serverTimestamp(),
+        'lastUpdated': FieldValue.serverTimestamp(),
       });
     }
   }
 
-  // ================= ADD VIDEO CALL REQUEST =================
+  /// Fetch user donations
+  Future<List<DonationModel>> fetchUserDonations(String userId) async {
+    final doc = await _firestore.collection('donations').doc(userId).get();
+
+    if (!doc.exists) return [];
+
+    final donations = (doc.data()?['donations'] as List<dynamic>?) ?? [];
+    return donations
+        .map((d) => DonationModel.fromMap(Map<String, dynamic>.from(d)))
+        .toList();
+  }
+
+  /// Submit a video call request
   Future<void> addVideoCallRequest({
-    required DateTime scheduledDateTime,
-    String? orphanageName,
+    required String donorId,
     required String donorName,
     required String donorPhone,
     required String donorEmail,
+    required String orphanageId,
+    required String orphanageName,
+    required DateTime scheduledTime,
   }) async {
-    try {
-      await _firestore.collection('videocallrequest').add({
-        'scheduledTime': Timestamp.fromDate(scheduledDateTime),
-        'orphanageName': orphanageName?.isNotEmpty == true
-            ? orphanageName
-            : 'No Name',
-        'donorName': donorName,
-        'donorPhone': donorPhone,
-        'donorEmail': donorEmail,
-        'videocallstatus': 'pending',
-        'requestTime': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      throw e;
-    }
+    final callID = '$donorId\_$orphanageId';
+    await _firestore.collection('videocallrequest').add({
+      'callID': callID,
+      'donorID': donorId,
+      'orphanageID': orphanageId,
+      'orphanageName': orphanageName,
+      'donorName': donorName,
+      'donorPhone': donorPhone,
+      'donorEmail': donorEmail,
+      'scheduledTime': Timestamp.fromDate(scheduledTime),
+      'requestTime': FieldValue.serverTimestamp(),
+      'videocallstatus': 'pending',
+    });
+  }
+
+  /// Fetch all video call requests
+  Future<List<Map<String, dynamic>>> fetchVideoCallRequests() async {
+    final snapshot = await _firestore
+        .collection('videocallrequest')
+        .orderBy('requestTime', descending: true)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      data['id'] = doc.id;
+      return data;
+    }).toList();
   }
 }

@@ -101,6 +101,14 @@ class DonorViewModel extends ChangeNotifier {
       phone: phone,
       donation: donation,
     );
+
+    // 🔥 NEW: Add to local list and update gamification
+    userDonations.insert(0, donation);
+    _calculateXPForDonation(donation);
+    _checkBadgesForDonation(donation);
+    _calculateWeeklyStreak();
+    await _saveGamificationData();
+    notifyListeners();
   }
 
   /// ---------------------------
@@ -183,6 +191,7 @@ class DonorViewModel extends ChangeNotifier {
   TimeOfDay? selectedTime;
   final TextEditingController timeController = TextEditingController();
   final DonationService _donationService = DonationService();
+
   // ===== Select Date =====
   void onDateSelected(DateTime selected, DateTime focused) {
     selectedDay = selected;
@@ -248,29 +257,6 @@ class DonorViewModel extends ChangeNotifier {
     }
   }
 
-  // video start button
-  // Future<void> logCallStart(String docID) async {
-  //   await _firestore.collection('videocallrequest').doc(docID).update({
-  //     'callStartedAt': FieldValue.serverTimestamp(),
-  //     'callStatus': 'ongoing',
-  //   });
-  // }
-
-  //call end
-
-  // Future<void> logCallEnd(String docID, DateTime startTime) async {
-  //   final endTime = DateTime.now();
-  //   final duration = endTime.difference(startTime).inSeconds;
-
-  //   await _firestore.collection('videocallrequest').doc(docID).update({
-  //     'callEndedAt': FieldValue.serverTimestamp(),
-  //     'callDuration': duration,
-  //     'callStatus': 'ended',
-  //   });
-  // }
-
-  // start video call
-
   List<Map<String, dynamic>> videoCallRequests = [];
   bool isFetchingVideoCalls = false;
 
@@ -335,22 +321,14 @@ class DonorViewModel extends ChangeNotifier {
         }).toList();
 
         donationError = null;
+
+        // 🔥 NEW: Initialize gamification after fetching donations
+        await _initializeGamification();
       } else {
         // No document exists for this user
         userDonations = [];
         donationError = null;
       }
-
-      // Optional: print for debug
-      // for (var d in userDonations) {
-      //   print('------------------------');
-      //   print('Foundation: ${d.foundationName}');
-      //   print('Category: ${d.category}');
-      //   print('Amount: ${d.amount}');
-      //   print('Quantity: ${d.quantity}');
-      //   print('Notes: ${d.notes}');
-      //   print('Time: ${d.timestamp}');
-      // }
     } catch (e) {
       donationError = e.toString();
       debugPrint('Error fetching donations: $e');
@@ -359,92 +337,640 @@ class DonorViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
-  // ======================
-  // KIND DNA PROFILE / BADGE SYSTEM
-  // ======================
 
-  // XP, Rank & Badges
-  int _xp = 0;
-  String _rank = 'Beginner';
-  List<String> _badges = [];
+  /// ===========================
+  /// GAMIFICATION & BADGES LOGIC - FIXED VERSION
+  /// ===========================
+  // XP & Level System
+  int xp = 0;
+  int level = 1;
+  String rank = 'Bronze';
+  List<String> badges = [];
 
-  int get xp => _xp;
-  String get rank => _rank;
-  List<String> get badges => _badges;
+  // Leaderboards
+  List<Map<String, dynamic>> globalLeaderboard = [];
+  List<Map<String, dynamic>> friendLeaderboard = [];
+  int weeklyStreak = 0;
 
-  /// ---------------------------
-  /// CALCULATE BADGES & RANK
-  /// ---------------------------
-  void calculateBadges() {
-    _xp = 0;
-    _badges = [];
+  // Event & Seasonal Challenges
+  final List<String> seasonalBadges = [
+    'Ramadan Donation Hero 🕌',
+    'Christmas Giver 🎄',
+    'Independence Day Supporter 🇵🇰',
+  ];
 
-    for (var donation in userDonations) {
-      // XP based on donation type
-      if (donation.category == 'Money' && donation.amount != null) {
-        _xp += (donation.amount! / 10).round() * 2; // 2 XP per $10
-      } else if (donation.quantity != null) {
-        _xp += donation.quantity! * 5; // 5 XP per item
-      }
+  // Donor Cards / Collectibles
+  List<Map<String, dynamic>> donorCards = [];
 
-      // Badges based on category
-      if (donation.category == 'Toys' && !_badges.contains('Toy Giver')) {
-        _badges.add('Toy Giver');
-      }
-      if (donation.category == 'Education' &&
-          !_badges.contains('Education Sponsor')) {
-        _badges.add('Education Sponsor');
-      }
-      if (donation.category == 'Money' && !_badges.contains('Philanthropist')) {
-        _badges.add('Philanthropist');
-      }
-    }
+  // XP thresholds for levels (extended)
+  final Map<int, int> levelThresholds = {
+    1: 0,
+    2: 100,
+    3: 250,
+    4: 500,
+    5: 1000,
+    6: 2000,
+    7: 4000,
+    8: 8000,
+    9: 15000,
+    10: 30000,
+  };
 
-    // Frequency-based badges
-    if (userDonations.length >= 5 && !_badges.contains('Regular Donor')) {
-      _badges.add('Regular Donor');
-    }
-    if (userDonations.length >= 10 && !_badges.contains('Hero Donor')) {
-      _badges.add('Hero Donor');
-    }
+  /// 🔥 NEW: Initialize gamification when fetching donations
+  Future<void> _initializeGamification() async {
+    // Load saved gamification data from Firestore
+    await _loadGamificationData();
 
-    // Assign rank based on XP
-    if (_xp >= 500) {
-      _rank = 'Champion';
-    } else if (_xp >= 250) {
-      _rank = 'Advanced';
-    } else if (_xp >= 100) {
-      _rank = 'Intermediate';
-    } else {
-      _rank = 'Beginner';
-    }
+    // Calculate stats from existing donations
+    _calculateGamificationFromDonations();
 
     notifyListeners();
   }
 
-  /// ---------------------------
-  /// SAVE BADGES & RANK TO FIRESTORE
-  /// ---------------------------
-  Future<void> saveBadgesToFirebase() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
+  /// 🔥 NEW: Load gamification data from Firestore
+  Future<void> _loadGamificationData() async {
     try {
-      await _firestore.collection('donations').doc(user.uid).update({
-        'xp': _xp,
-        'rank': _rank,
-        'badges': _badges,
-      });
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final snapshot = await _firestore
+          .collection('user_gamification')
+          .doc(user.uid)
+          .get();
+
+      if (snapshot.exists) {
+        final data = snapshot.data()!;
+        xp = data['xp'] ?? 0;
+        level = data['level'] ?? 1;
+        rank = data['rank'] ?? 'Bronze';
+        badges = List<String>.from(data['badges'] ?? []);
+        weeklyStreak = data['weeklyStreak'] ?? 0;
+        donorCards = List<Map<String, dynamic>>.from(data['donorCards'] ?? []);
+      }
     } catch (e) {
-      debugPrint('Error saving badges: $e');
+      debugPrint('Error loading gamification data: $e');
     }
   }
 
-  /// ---------------------------
-  /// REFRESH BADGES AFTER FETCHING DONATIONS
-  /// ---------------------------
-  Future<void> updateBadges() async {
-    calculateBadges();
-    await saveBadgesToFirebase();
+  /// 🔥 NEW: Calculate gamification stats from donations
+  void _calculateGamificationFromDonations() {
+    if (userDonations.isEmpty) return;
+
+    // Reset to defaults for recalculation
+    int totalXP = 0;
+    List<String> earnedBadges = [];
+    Map<String, int> categoryCounts = {};
+
+    // Calculate from all donations
+    for (var donation in userDonations) {
+      // Calculate XP
+      totalXP += _calculateSingleDonationXP(donation);
+
+      // Track category counts for badges
+      final category = donation.category ?? 'Other';
+      categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
+
+      // Check for badges
+      earnedBadges.addAll(_getBadgesForSingleDonation(donation));
+
+      // Add to donor cards
+      donorCards.add({
+        'category': donation.category,
+        'amount': donation.amount ?? 0,
+        'quantity': donation.quantity ?? 0,
+        'timestamp': donation.timestamp,
+        'foundationName': donation.foundationName,
+      });
+    }
+
+    // Update XP
+    xp = totalXP;
+
+    // Add category-based badges
+    for (var entry in categoryCounts.entries) {
+      earnedBadges.addAll(_getCategoryBadges(entry.key, entry.value));
+    }
+
+    // Update badges (avoid duplicates)
+    badges = [...badges, ...earnedBadges].toSet().toList();
+
+    // Calculate level
+    level = _calculateLevelFromXP(xp);
+
+    // Update rank
+    rank = _calculateRankFromLevel(level);
+
+    // Calculate weekly streak
+    weeklyStreak = _calculateWeeklyStreakCount();
+
+    // Check micro-milestones
+    _checkMicroMilestones();
+  }
+
+  /// 🔥 NEW: Calculate XP for a single donation
+  int _calculateSingleDonationXP(DonationModel donation) {
+    int earnedXP = 0;
+
+    // Money donations: 1 XP per Rs 10
+    if (donation.amount != null) {
+      earnedXP += (donation.amount! / 10).ceil();
+    }
+
+    // Item donations: 2 XP per item
+    if (donation.quantity != null) {
+      earnedXP += donation.quantity! * 2;
+    }
+
+    // Category bonuses
+    switch (donation.category?.toLowerCase()) {
+      case 'money':
+        earnedXP += 5; // Bonus for money donations
+        break;
+      case 'education':
+        earnedXP += 10; // Extra bonus for education
+        break;
+      case 'food':
+        earnedXP += 3; // Small bonus for food
+        break;
+      case 'toys':
+        earnedXP += 2; // Bonus for toys
+        break;
+      case 'clothes':
+        earnedXP += 2; // Bonus for clothes
+        break;
+    }
+
+    return earnedXP;
+  }
+
+  /// 🔥 NEW: Calculate XP for donation (used in donateNow)
+  void _calculateXPForDonation(DonationModel donation) {
+    xp += _calculateSingleDonationXP(donation);
+    _checkLevelUp();
+  }
+
+  /// 🔥 NEW: Get badges for a donation
+  List<String> _getBadgesForSingleDonation(DonationModel donation) {
+    List<String> donationBadges = [];
+    final category = donation.category?.toLowerCase();
+    final amount = donation.amount;
+    final quantity = donation.quantity;
+    final timestamp = donation.timestamp;
+
+    // First donation
+    if (userDonations.indexOf(donation) == 0) {
+      donationBadges.add('First Step 👣');
+    }
+
+    // Amount milestones
+    if (amount != null) {
+      if (amount >= 1000) donationBadges.add('K+ Donor 💰');
+      if (amount >= 5000) donationBadges.add('Major Donor 💎');
+      if (amount >= 10000) donationBadges.add('Philanthropist 🏛️');
+    }
+
+    // Quantity milestones
+    if (quantity != null && quantity >= 10) {
+      donationBadges.add('Bulk Donor 📦');
+    }
+
+    // Seasonal badges
+    if (timestamp.month == 12 && timestamp.day <= 25) {
+      donationBadges.add('Christmas Giver 🎄');
+    }
+    if (timestamp.month == 4 && timestamp.day <= 10) {
+      donationBadges.add('Ramadan Donation Hero 🕌');
+    }
+    if (timestamp.month == 8 && timestamp.day == 14) {
+      donationBadges.add('Independence Day Supporter 🇵🇰');
+    }
+
+    return donationBadges;
+  }
+
+  /// 🔥 NEW: Check badges for donation (used in donateNow)
+  void _checkBadgesForDonation(DonationModel donation) {
+    final newBadges = _getBadgesForSingleDonation(donation);
+    for (var badge in newBadges) {
+      if (!badges.contains(badge)) {
+        badges.add(badge);
+      }
+    }
+
+    // Update category counts for badge evolution
+    final categoryKey = donation.category ?? 'Other';
+    int categoryCount = userDonations
+        .where((d) => d.category == categoryKey)
+        .length;
+
+    final categoryBadges = _getCategoryBadges(categoryKey, categoryCount);
+    for (var badge in categoryBadges) {
+      if (!badges.contains(badge)) {
+        badges.add(badge);
+      }
+    }
+  }
+
+  /// 🔥 NEW: Get category-specific badges
+  List<String> _getCategoryBadges(String category, int count) {
+    List<String> categoryBadges = [];
+    final lowerCategory = category.toLowerCase();
+
+    if (lowerCategory == 'toys') {
+      if (count >= 5) categoryBadges.add('Toy Giver 🧸');
+      if (count >= 10) categoryBadges.add('Toy Master 🎯');
+      if (count >= 25) categoryBadges.add('Toy Legend 🏆');
+    }
+
+    if (lowerCategory == 'education') {
+      if (count >= 3) categoryBadges.add('Education Sponsor 📚');
+      if (count >= 10) categoryBadges.add('Education Champion 🎓');
+    }
+
+    if (lowerCategory == 'food') {
+      if (count >= 5) categoryBadges.add('Food Provider 🍎');
+      if (count >= 10) categoryBadges.add('Food Hero 🍲');
+    }
+
+    if (lowerCategory == 'clothes') {
+      if (count >= 5) categoryBadges.add('Warm Hearts ❤️');
+      if (count >= 10) categoryBadges.add('Fashion Giver 👕');
+    }
+
+    if (lowerCategory == 'money') {
+      if (count >= 3) categoryBadges.add('Financial Supporter 💵');
+      if (count >= 10) categoryBadges.add('Money Maven 💰');
+    }
+
+    return categoryBadges;
+  }
+
+  /// 🔥 NEW: Calculate level from XP
+  int _calculateLevelFromXP(int xp) {
+    int calculatedLevel = 1;
+
+    for (var entry in levelThresholds.entries) {
+      if (xp >= entry.value) {
+        calculatedLevel = entry.key;
+      }
+    }
+
+    return calculatedLevel;
+  }
+
+  /// 🔥 NEW: Check level up
+  void _checkLevelUp() {
+    int newLevel = _calculateLevelFromXP(xp);
+
+    if (newLevel > level) {
+      level = newLevel;
+      badges.add('Level $level Achiever 🏆');
+      _updateRank();
+    }
+  }
+
+  /// 🔥 NEW: Calculate rank from level
+  String _calculateRankFromLevel(int level) {
+    if (level <= 3) return 'Bronze';
+    if (level <= 6) return 'Silver';
+    if (level <= 9) return 'Gold';
+    return 'Platinum';
+  }
+
+  /// 🔥 NEW: Update rank
+  void _updateRank() {
+    rank = _calculateRankFromLevel(level);
+  }
+
+  /// 🔥 NEW: Calculate weekly streak count
+  int _calculateWeeklyStreakCount() {
+    if (userDonations.isEmpty) return 0;
+
+    final now = DateTime.now();
+    final startOfWeek = DateTime(
+      now.year,
+      now.month,
+      now.day - now.weekday + 1,
+    );
+
+    // Count donations from this week
+    int streak = 0;
+    for (var donation in userDonations) {
+      if (donation.timestamp.isAfter(startOfWeek)) {
+        streak++;
+      }
+    }
+
+    return streak;
+  }
+
+  /// 🔥 NEW: Calculate weekly streak (used in donateNow)
+  void _calculateWeeklyStreak() {
+    weeklyStreak = _calculateWeeklyStreakCount();
+  }
+
+  /// 🔥 NEW: Save gamification data to Firestore
+  Future<void> _saveGamificationData() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      await _firestore.collection('user_gamification').doc(user.uid).set({
+        'xp': xp,
+        'level': level,
+        'rank': rank,
+        'badges': badges,
+        'weeklyStreak': weeklyStreak,
+        'donorCards': donorCards,
+        'totalDonations': userDonations.length,
+        'lastUpdated': FieldValue.serverTimestamp(),
+        'userId': user.uid,
+        'userEmail': user.email,
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('Error saving gamification data: $e');
+    }
+  }
+
+  /// 🔥 NEW: Get XP progress percentage (0.0 to 1.0)
+  double get xpProgress {
+    final currentThreshold = levelThresholds[level] ?? 0;
+    final nextLevel = level + 1;
+    final nextThreshold =
+        levelThresholds[nextLevel] ?? (currentThreshold + 1000);
+
+    if (nextThreshold <= currentThreshold) return 1.0;
+
+    final xpInCurrentLevel = xp - currentThreshold;
+    final xpNeededForNextLevel = nextThreshold - currentThreshold;
+
+    return (xpInCurrentLevel / xpNeededForNextLevel).clamp(0.0, 1.0);
+  }
+
+  /// 🔥 NEW: Get XP needed for next level
+  int get xpToNextLevel {
+    final currentThreshold = levelThresholds[level] ?? 0;
+    final nextLevel = level + 1;
+    final nextThreshold =
+        levelThresholds[nextLevel] ?? (currentThreshold + 1000);
+
+    return (nextThreshold - xp).clamp(0, nextThreshold);
+  }
+
+  /// 🔥 NEW: Get level thresholds list
+  List<Map<String, dynamic>> get levelProgressData {
+    return levelThresholds.entries.map((entry) {
+      return {
+        'level': entry.key,
+        'xpRequired': entry.value,
+        'unlocked': xp >= entry.value,
+      };
+    }).toList();
+  }
+
+  /// ===== Enhanced Micro Milestones =====
+  void checkMicroMilestones() {
+    // First donation
+    if (userDonations.isNotEmpty && !badges.contains('Welcome Gift 🎁')) {
+      badges.add('Welcome Gift 🎁');
+    }
+
+    // Donation count milestones
+    final donationCount = userDonations.length;
+    if (donationCount >= 3 && !badges.contains('Weekly Starter 🏁')) {
+      badges.add('Weekly Starter 🏁');
+    }
+    if (donationCount >= 10 && !badges.contains('Consistent Giver 🔄')) {
+      badges.add('Consistent Giver 🔄');
+    }
+    if (donationCount >= 25 && !badges.contains('Dedicated Donor 💫')) {
+      badges.add('Dedicated Donor 💫');
+    }
+    if (donationCount >= 50 && !badges.contains('Legendary Giver 🌟')) {
+      badges.add('Legendary Giver 🌟');
+    }
+
+    // Total items donated
+    int totalItems = userDonations.fold(0, (sum, d) => sum + (d.quantity ?? 0));
+    if (totalItems >= 50 && !badges.contains('Collector 🗃️')) {
+      badges.add('Collector 🗃️');
+    }
+    if (totalItems >= 100 && !badges.contains('Super Collector 📦')) {
+      badges.add('Super Collector 📦');
+    }
+    if (totalItems >= 250 && !badges.contains('Ultimate Collector 🏆')) {
+      badges.add('Ultimate Collector 🏆');
+    }
+
+    // Total amount donated
+    double totalAmount = userDonations.fold(
+      0.0,
+      (sum, d) => sum + (d.amount ?? 0),
+    );
+    if (totalAmount >= 5000 && !badges.contains('Generous Heart ❤️')) {
+      badges.add('Generous Heart ❤️');
+    }
+    if (totalAmount >= 10000 && !badges.contains('Angel Donor 👼')) {
+      badges.add('Angel Donor 👼');
+    }
+
+    // Category variety
+    final categories = userDonations.map((d) => d.category ?? '').toSet();
+    if (categories.length >= 3 && !badges.contains('Diverse Giver 🌈')) {
+      badges.add('Diverse Giver 🌈');
+    }
+    if (categories.length >= 5 && !badges.contains('Universal Donor 🌍')) {
+      badges.add('Universal Donor 🌍');
+    }
+
+    // Call save to update in Firestore
+    _saveGamificationData();
+  }
+
+  /// 🔥 NEW: Internal micro-milestones check
+  void _checkMicroMilestones() {
+    // First donation
+    if (userDonations.isNotEmpty && !badges.contains('Welcome Gift 🎁')) {
+      badges.add('Welcome Gift 🎁');
+    }
+
+    // Donation count milestones
+    final donationCount = userDonations.length;
+    if (donationCount >= 3 && !badges.contains('Weekly Starter 🏁')) {
+      badges.add('Weekly Starter 🏁');
+    }
+    if (donationCount >= 10 && !badges.contains('Consistent Giver 🔄')) {
+      badges.add('Consistent Giver 🔄');
+    }
+
+    // Total items donated
+    int totalItems = userDonations.fold(0, (sum, d) => sum + (d.quantity ?? 0));
+    if (totalItems >= 100 && !badges.contains('Collector 🗃️')) {
+      badges.add('Collector 🗃️');
+    }
+  }
+
+  /// ===== Enhanced Leaderboards =====
+  Future<void> fetchGlobalLeaderboard() async {
+    try {
+      final snapshot = await _firestore
+          .collection('user_gamification')
+          .orderBy('xp', descending: true)
+          .limit(50)
+          .get();
+
+      globalLeaderboard = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'userId': doc.id,
+          'name': data['userEmail']?.toString().split('@').first ?? 'Anonymous',
+          'xp': data['xp'] ?? 0,
+          'level': data['level'] ?? 1,
+          'rank': data['rank'] ?? 'Bronze',
+          'badgeCount': (data['badges'] as List?)?.length ?? 0,
+          'totalDonations': data['totalDonations'] ?? 0,
+        };
+      }).toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error fetching global leaderboard: $e');
+    }
+  }
+
+  /// ===== Weekly Streak Methods =====
+  void updateWeeklyStreak(bool donatedToday) {
+    if (donatedToday) {
+      weeklyStreak++;
+    } else {
+      weeklyStreak = 0;
+    }
+    _saveGamificationData();
+    notifyListeners();
+  }
+
+  /// ===== Share Badges / Social =====
+  void shareBadges() {
+    // TODO: integrate Share package to share badge list
+    debugPrint('Sharing badges: ${badges.join(', ')}');
+  }
+
+  /// ===== Donation Combos =====
+  void checkDonationCombo(String category) {
+    // Example: Donate multiple categories in a week → combo badge
+    if (category == 'Money' && badges.contains('Toy Giver')) {
+      _addBadge('Combo Donor 🏅');
+    }
+  }
+
+  /// ===== Reset Weekly Leaderboard =====
+  void resetWeeklyLeaderboard() {
+    weeklyStreak = 0;
+    _saveGamificationData();
+    notifyListeners();
+  }
+
+  /// 🔥 NEW: Get user's position in leaderboard
+  int get leaderboardPosition {
+    if (globalLeaderboard.isEmpty) return 0;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return 0;
+
+    for (int i = 0; i < globalLeaderboard.length; i++) {
+      if (globalLeaderboard[i]['userId'] == user.uid) {
+        return i + 1;
+      }
+    }
+
+    return 0;
+  }
+
+  /// 🔥 NEW: Get next rank info
+  Map<String, dynamic> get nextRankInfo {
+    final nextLevel = level + 1;
+    final nextRank = _calculateRankFromLevel(nextLevel);
+    final nextThreshold =
+        levelThresholds[nextLevel] ?? (levelThresholds[level]! + 1000);
+
+    return {
+      'nextLevel': nextLevel,
+      'nextRank': nextRank,
+      'xpNeeded': nextThreshold - xp,
+      'currentLevelMinXP': levelThresholds[level] ?? 0,
+      'nextLevelMinXP': nextThreshold,
+    };
+  }
+
+  /// 🔥 NEW: Get badge counts by category
+  Map<String, int> get badgeCategoryCounts {
+    Map<String, int> counts = {
+      'Level': 0,
+      'Category': 0,
+      'Milestone': 0,
+      'Seasonal': 0,
+      'Special': 0,
+    };
+
+    for (var badge in badges) {
+      if (badge.contains('Level')) {
+        counts['Level'] = counts['Level']! + 1;
+      } else if (badge.contains('Toy') ||
+          badge.contains('Education') ||
+          badge.contains('Food') ||
+          badge.contains('Clothes') ||
+          badge.contains('Money')) {
+        counts['Category'] = counts['Category']! + 1;
+      } else if (badge.contains('Christmas') ||
+          badge.contains('Ramadan') ||
+          badge.contains('Independence')) {
+        counts['Seasonal'] = counts['Seasonal']! + 1;
+      } else if (badge.contains('First') ||
+          badge.contains('Welcome') ||
+          badge.contains('Weekly') ||
+          badge.contains('Dedicated') ||
+          badge.contains('Collector')) {
+        counts['Milestone'] = counts['Milestone']! + 1;
+      } else {
+        counts['Special'] = counts['Special']! + 1;
+      }
+    }
+
+    return counts;
+  }
+
+  /// 🔥 NEW: Get total donation statistics
+  Map<String, dynamic> get donationStats {
+    double totalAmount = userDonations.fold(
+      0.0,
+      (sum, d) => sum + (d.amount ?? 0),
+    );
+    int totalItems = userDonations.fold(0, (sum, d) => sum + (d.quantity ?? 0));
+    int uniqueOrphanages = userDonations
+        .map((d) => d.foundationId)
+        .toSet()
+        .length;
+
+    return {
+      'totalAmount': totalAmount,
+      'totalItems': totalItems,
+      'donationCount': userDonations.length,
+      'uniqueOrphanages': uniqueOrphanages,
+      'avgDonationAmount': userDonations.isNotEmpty
+          ? totalAmount / userDonations.length
+          : 0,
+      'firstDonationDate': userDonations.isNotEmpty
+          ? userDonations.last.timestamp
+          : null,
+      'lastDonationDate': userDonations.isNotEmpty
+          ? userDonations.first.timestamp
+          : null,
+    };
+  }
+
+  /// 🔥 NEW: Helper method to add badge
+  void _addBadge(String badge) {
+    if (!badges.contains(badge)) {
+      badges.add(badge);
+    }
   }
 }
