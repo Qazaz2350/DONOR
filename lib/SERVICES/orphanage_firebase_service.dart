@@ -128,4 +128,65 @@ class OrphanageFirebaseService {
       return null;
     }
   }
+
+  // fetch orphangae signin
+  Future<List<Map<String, dynamic>>> fetchAllOrphanages() async {
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('orphanage')
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return {'uid': doc.id, ...data};
+      }).toList();
+    } catch (e) {
+      print('Fetch orphanages error: $e');
+      return [];
+    }
+  }
+
+  // ===== Fetch CURRENT Signed-in Orphanage Profile (ALL FIELDS) =====
+  static Future<Map<String, dynamic>?> fetchCurrentOrphanageProfile() async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) return null;
+
+      final doc = await _firestore.collection('orphanage').doc(uid).get();
+
+      if (!doc.exists) return null;
+
+      final data = doc.data()!;
+      print('Fetched Orphanage Address: ${data['orphanageaddress']}');
+
+      // Return ALL relevant fields
+      return {
+        'uid': doc.id,
+        'fullName': data['orphanagename'] ?? '',
+        'email': data['email'] ?? '',
+        'phone': data['phone'] ?? '',
+        'address': data['orphanageaddress'] ?? '',
+
+        'status': data['status'] ?? '',
+        'cnic': data['cnic'] ?? '',
+        'cnicImage': data['cnicImage'] ?? '',
+        'signBoardImage': data['signBoardImage'] ?? '',
+        'orphanageImage': data['orphanageImage'] ?? '',
+        'needs': List<String>.from(data['needs'] ?? []),
+        'additionalImages': List<String>.from(data['additionalImages'] ?? []),
+        'stories': List<Map<String, dynamic>>.from(data['stories'] ?? []),
+        'volunteeringEvents': List<Map<String, dynamic>>.from(
+          data['volunteeringEvents'] ?? [],
+        ),
+        'verified': data['verified'] ?? false,
+        'latitude': data['latitude'] ?? 0.0,
+        'longitude': data['longitude'] ?? 0.0,
+        'createdAt': data['createdAt'] ?? null,
+      };
+    } catch (e) {
+      print('Fetch current orphanage profile error: $e');
+      return null;
+    }
+  }
 }

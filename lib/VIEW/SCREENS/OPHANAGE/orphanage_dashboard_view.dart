@@ -1,13 +1,23 @@
-import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanagehome/orphanage_home_view.dart';
+import 'package:donate/Utilis/nav.dart';
+import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_home/orphanage_home_view.dart';
+import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanagecallreeq/orphanage_callreq_view.dart';
+import 'package:donate/VIEW/SCREENS/OPHANAGE/profile/orphanageProfileView.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:donate/VIEWMODEL/SCREENS/ORPHANAGE/orphanage_view_model.dart';
 import 'package:donate/UTILIS/app_colors.dart';
-import 'package:donate/UTILIS/app_fonts.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/request_view.dart';
 
 class OrphanageDashboardView extends StatefulWidget {
-  const OrphanageDashboardView({super.key});
+  // final String fullname;
+  // final String email;
+  // final String phone;
+  const OrphanageDashboardView({
+    super.key,
+    // required this.fullname,
+    // required this.email,
+    // required this.phone,
+  });
 
   @override
   State<OrphanageDashboardView> createState() => _OrphanageDashboardViewState();
@@ -17,12 +27,19 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  final List<String> _titles = ['Dashboard', 'Create Request', 'Profile'];
+  // Option 2: All 4 titles
+  final List<String> _titles = [
+    'Home Dashboard',
+    'Call Requests',
+    'Create Request',
+    // 'Profile',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    // Length should match tabs count (4)
+    _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() => setState(() {}));
   }
 
@@ -33,52 +50,43 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
       child: Consumer<OrphanageViewModel>(
         builder: (context, vm, _) {
           return Scaffold(
-            drawer: _buildDrawer(vm),
+            // drawer: _buildDrawer(vm),
             appBar: AppBar(
-              title: Text(_titles[_tabController.index]),
-              leading: Builder(
-                builder: (context) => IconButton(
-                  icon: const Icon(Icons.menu),
-                  onPressed: () => Scaffold.of(context).openDrawer(),
+              centerTitle: true, // Center the title
+              title: Text(
+                _titles[_tabController.index],
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 12.0),
+              leadingWidth: 70, // Increase width to fit avatar nicely
+              leading: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GestureDetector(
+                  onTap: () {
+                    Nav.push(context, Orphanageprofileview());
+                  },
                   child: CircleAvatar(
-                    radius: 18,
-                    backgroundColor: AppColors.primary,
-                    child: const Icon(Icons.home, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-            body: TabBarView(
-              controller: _tabController,
-              children: [
-                // Home tab simplified
-                Text("home"),
-                OrphanageHomeView(),
-
-                // Create Request
-                OrphanageRequestView(),
-
-                // Profile
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'Welcome, ${vm.nameController.text.isEmpty ? '*profile' : vm.nameController.text}!',
-                    style: TextStyle(
-                      fontSize: FontSizes.f16,
-                      fontWeight: FontWeight.bold,
+                    radius: 20,
+                    backgroundImage: NetworkImage(
+                      'https://example.com/avatar.jpg', // Replace with your image URL or AssetImage
                     ),
                   ),
                 ),
+              ),
+            ),
 
-                //call
-                // Text(
-                //   'Welcome, ${vm.nameController.text.isEmpty ? 'Call' : vm.nameController.text}!',
-                // ),
+            body: TabBarView(
+              controller: _tabController,
+              children: [
+                // Tab 1: Home
+                OrphanageHomeView(),
+                // Tab 2: Call Requests
+                Text("data"),
+
+                // Tab 3: Create Request
+                OrphanageRequestView(),
               ],
             ),
             bottomNavigationBar: Material(
@@ -90,49 +98,14 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
                 unselectedLabelColor: Colors.white70,
                 tabs: const [
                   Tab(icon: Icon(Icons.home), text: 'Home'),
-                  Tab(icon: Icon(Icons.dashboard), text: 'call request'),
+                  Tab(icon: Icon(Icons.video_call), text: 'Call Requests'),
                   Tab(icon: Icon(Icons.add_box), text: 'Create'),
-                  Tab(icon: Icon(Icons.person), text: 'Profile'),
-                  // Tab(
-                  //   icon: Icon(Icons.remove_from_queue_sharp),
-                  //   text: 'Call Requests',
-                  // ),
+                  // Tab(icon: Icon(Icons.person), text: 'Profile'),
                 ],
               ),
             ),
           );
         },
-      ),
-    );
-  }
-
-  /// ================= DRAWER =================
-  Widget _buildDrawer(OrphanageViewModel vm) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          UserAccountsDrawerHeader(
-            accountName: Text(
-              vm.nameController.text.isEmpty
-                  ? 'Orphanage'
-                  : vm.nameController.text,
-            ),
-            accountEmail: Text(vm.emailController.text),
-            currentAccountPicture: CircleAvatar(
-              backgroundColor: AppColors.primary,
-              child: const Icon(Icons.home, color: Colors.white),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.phone),
-            title: Text(vm.phoneController.text),
-          ),
-          ListTile(
-            leading: const Icon(Icons.location_on),
-            title: Text(vm.addressController.text),
-          ),
-        ],
       ),
     );
   }

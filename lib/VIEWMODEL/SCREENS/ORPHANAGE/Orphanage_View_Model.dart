@@ -6,6 +6,7 @@ import 'package:donate/Utilis/nav.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_waiting_view.dart';
 import 'package:donate/SERVICES/orphanage_firebase_service.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class OrphanageViewModel extends ChangeNotifier {
   // ===== Form Controllers =====
@@ -14,6 +15,16 @@ class OrphanageViewModel extends ChangeNotifier {
   final phoneController = TextEditingController();
   final addressController = TextEditingController();
   final cnicController = TextEditingController();
+
+  // ADD THESE NEW CONTROLLERS FOR EDITING
+  final needsController = TextEditingController();
+  final storyTitleController = TextEditingController();
+  final storyDescriptionController = TextEditingController();
+  final eventTitleController = TextEditingController();
+  final eventDescriptionController = TextEditingController();
+  final eventDateController = TextEditingController();
+  final eventTimeController = TextEditingController();
+
   // location
   double? latitude;
   double? longitude;
@@ -34,6 +45,10 @@ class OrphanageViewModel extends ChangeNotifier {
   // ===== Current UID =====
   String? get uid => FirebaseAuth.instance.currentUser?.uid;
 
+  // ===== ADD FIREBASE STORAGE INSTANCE =====
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   // ===== Submit Orphanage (Standard Signup) =====
   Future<void> submitOrphanage(BuildContext context) async {
     final currentUid = uid;
@@ -52,7 +67,6 @@ class OrphanageViewModel extends ChangeNotifier {
       await OrphanageFirebaseService.submitOrphanageProfile(
         uid: currentUid,
         name: nameController.text.trim(),
-
         address: addressController.text.trim(),
         cnic: cnicController.text.trim(),
         cnicImage: cnicImage,
@@ -91,7 +105,6 @@ class OrphanageViewModel extends ChangeNotifier {
     try {
       await OrphanageFirebaseService.submitOffdOrphanageProfile(
         uid: currentUid,
-
         cnicImage: cnicImage,
         signboardImage: signboardImage,
         orphanageImage: orphanageImage,
@@ -100,11 +113,9 @@ class OrphanageViewModel extends ChangeNotifier {
         stories: stories ?? [],
         volunteeringEvents: volunteeringEvents ?? [],
         verified: verified,
-        // status: 'AdminApprovalWaiting',
       );
 
       _showSnack(context, 'OFFD Orphanage profile submitted for verification');
-
       isVerified = true;
       notifyListeners();
     } catch (e) {
@@ -127,7 +138,6 @@ class OrphanageViewModel extends ChangeNotifier {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Check if location services are enabled
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       _showSnack(context, 'Location services are disabled.');
@@ -136,7 +146,6 @@ class OrphanageViewModel extends ChangeNotifier {
       return;
     }
 
-    // Check for location permissions
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -159,14 +168,12 @@ class OrphanageViewModel extends ChangeNotifier {
     }
 
     try {
-      // Get current position
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
       latitude = position.latitude;
       longitude = position.longitude;
-
       _showSnack(context, 'Location fetched successfully.');
     } catch (e) {
       _showSnack(context, 'Failed to get location: $e');
@@ -176,8 +183,360 @@ class OrphanageViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ===== EDIT METHODS FOR NEEDS, STORIES, EVENTS =====
+
+  // For Needs editing
+  bool isEditingNeeds = false;
+
+  void toggleEditNeeds() {
+    isEditingNeeds = !isEditingNeeds;
+    if (isEditingNeeds) {
+      needsController.text = needs.join(', ');
+    }
+    notifyListeners();
+  }
+
+  Future<void> saveNeeds(BuildContext context) async {
+    final currentUid = uid;
+    if (currentUid == null) return;
+
+    try {
+      // Split by commas and trim
+      List<String> newNeeds = needsController.text
+          .split(',')
+          .map((need) => need.trim())
+          .where((need) => need.isNotEmpty)
+          .toList();
+
+      // Update local state
+      needs = newNeeds;
+
+      // Update Firestore
+      await _firestore.collection('orphanage').doc(currentUid).update({
+        'needs': newNeeds,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      _showSnack(context, 'Needs updated successfully');
+      notifyListeners();
+    } catch (e) {
+      _showSnack(context, 'Error updating needs: $e');
+    }
+  }
+
+  // FIXED: This method now saves to Firebase
+  Future<void> addNeed(String need, BuildContext context) async {
+    final currentUid = uid;
+    if (currentUid == null) return;
+
+    if (need.trim().isNotEmpty) {
+      try {
+        // Add to local list
+        needs.add(need.trim());
+
+        // Save to Firebase
+        await _firestore.collection('orphanage').doc(currentUid).update({
+          'needs': needs,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        _showSnack(context, 'Need added successfully');
+        notifyListeners();
+      } catch (e) {
+        _showSnack(context, 'Error adding need: $e');
+        // Rollback on error
+        if (needs.isNotEmpty) needs.removeLast();
+      }
+    }
+  }
+
+  Future<void> removeNeed(BuildContext context, int index) async {
+    final currentUid = uid;
+    if (currentUid == null) return;
+
+    if (index >= 0 && index < needs.length) {
+      try {
+        needs.removeAt(index);
+
+        await _firestore.collection('orphanage').doc(currentUid).update({
+          'needs': needs,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        _showSnack(context, 'Need removed successfully');
+        notifyListeners();
+      } catch (e) {
+        _showSnack(context, 'Error removing need: $e');
+      }
+    }
+  }
+
+  // FIXED: Added this method for bulk editing from UI
+  Future<void> saveNeedsFromList(
+    BuildContext context,
+    List<String> newNeeds,
+  ) async {
+    final currentUid = uid;
+    if (currentUid == null) return;
+
+    try {
+      // Update local state
+      needs = newNeeds;
+
+      // Update Firestore
+      await _firestore.collection('orphanage').doc(currentUid).update({
+        'needs': newNeeds,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      _showSnack(context, 'Needs updated successfully');
+      notifyListeners();
+    } catch (e) {
+      _showSnack(context, 'Error updating needs: $e');
+    }
+  }
+
+  // For Stories editing
+  bool isAddingStory = false;
+
+  void toggleAddStory() {
+    isAddingStory = !isAddingStory;
+    if (!isAddingStory) {
+      storyTitleController.clear();
+      storyDescriptionController.clear();
+    }
+    notifyListeners();
+  }
+
+  Future<void> addStory(BuildContext context) async {
+    final currentUid = uid;
+    if (currentUid == null) return;
+
+    if (storyTitleController.text.trim().isEmpty ||
+        storyDescriptionController.text.trim().isEmpty) {
+      _showSnack(context, 'Please fill title and description');
+      return;
+    }
+
+    try {
+      final newStory = {
+        'title': storyTitleController.text.trim(),
+        'description': storyDescriptionController.text.trim(),
+        'date': DateTime.now().toIso8601String(),
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      };
+
+      // Step 1: LOCAL update (immediate UI refresh)
+      stories.add(newStory);
+      notifyListeners();
+
+      // Step 2: Save to Firestore
+      await _firestore.collection('orphanage').doc(currentUid).update({
+        'stories': stories,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      _showSnack(context, 'Story added successfully');
+
+      // Clear controllers
+      storyTitleController.clear();
+      storyDescriptionController.clear();
+    } catch (e) {
+      _showSnack(context, 'Error adding story: $e');
+      // Rollback on error
+      if (stories.isNotEmpty) stories.removeLast();
+      notifyListeners();
+    }
+  }
+
+  Future<void> removeStory(BuildContext context, int index) async {
+    final currentUid = uid;
+    if (currentUid == null) return;
+
+    if (index >= 0 && index < stories.length) {
+      try {
+        stories.removeAt(index);
+
+        await _firestore.collection('orphanage').doc(currentUid).update({
+          'stories': stories,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        _showSnack(context, 'Story removed successfully');
+        notifyListeners();
+      } catch (e) {
+        _showSnack(context, 'Error removing story: $e');
+      }
+    }
+  }
+
+  // For Volunteering Events editing
+  bool isAddingEvent = false;
+
+  void toggleAddEvent() {
+    isAddingEvent = !isAddingEvent;
+    if (!isAddingEvent) {
+      eventTitleController.clear();
+      eventDescriptionController.clear();
+      eventDateController.clear();
+      eventTimeController.clear();
+    }
+    notifyListeners();
+  }
+
+  Future<void> addVolunteeringEvent(BuildContext context) async {
+    final currentUid = uid;
+    if (currentUid == null) return;
+
+    if (eventTitleController.text.trim().isEmpty ||
+        eventDescriptionController.text.trim().isEmpty ||
+        eventDateController.text.trim().isEmpty ||
+        eventTimeController.text.trim().isEmpty) {
+      _showSnack(context, 'Please fill all event fields');
+      return;
+    }
+
+    try {
+      final newEvent = {
+        'title': eventTitleController.text.trim(),
+        'description': eventDescriptionController.text.trim(),
+        'date': eventDateController.text.trim(),
+        'time': eventTimeController.text.trim(),
+        'createdAt': DateTime.now().toIso8601String(),
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      };
+
+      volunteeringEvents.add(newEvent);
+
+      await _firestore.collection('orphanage').doc(currentUid).update({
+        'volunteeringEvents': volunteeringEvents,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      _showSnack(context, 'Event added successfully');
+
+      eventTitleController.clear();
+      eventDescriptionController.clear();
+      eventDateController.clear();
+      eventTimeController.clear();
+      isAddingEvent = false;
+      notifyListeners();
+    } catch (e) {
+      _showSnack(context, 'Error adding event: $e');
+    }
+  }
+
+  // Add this method to your ViewModel
+  Future<void> addVolunteeringEventWithData(
+    BuildContext context, {
+    required String title,
+    required String description,
+    required String date,
+    required String time,
+  }) async {
+    final currentUid = uid;
+    if (currentUid == null) return;
+
+    try {
+      final newEvent = {
+        'title': title,
+        'description': description,
+        'date': date,
+        'time': time,
+        'createdAt': DateTime.now().toIso8601String(),
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      };
+
+      // Add to local list
+      volunteeringEvents.add(newEvent);
+      notifyListeners();
+
+      // Save to Firestore
+      await _firestore.collection('orphanage').doc(currentUid).update({
+        'volunteeringEvents': volunteeringEvents,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      _showSnack(context, 'Event added successfully');
+    } catch (e) {
+      _showSnack(context, 'Error adding event: $e');
+      // Rollback
+      if (volunteeringEvents.isNotEmpty) volunteeringEvents.removeLast();
+      notifyListeners();
+    }
+  }
+
+  Future<void> removeEvent(BuildContext context, int index) async {
+    final currentUid = uid;
+    if (currentUid == null) return;
+
+    if (index >= 0 && index < volunteeringEvents.length) {
+      try {
+        volunteeringEvents.removeAt(index);
+
+        await _firestore.collection('orphanage').doc(currentUid).update({
+          'volunteeringEvents': volunteeringEvents,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        _showSnack(context, 'Event removed successfully');
+        notifyListeners();
+      } catch (e) {
+        _showSnack(context, 'Error removing event: $e');
+      }
+    }
+  }
+
+  // For Additional Images editing
+  bool isAddingImages = false;
+
+  Future<void> addImage(BuildContext context, File imageFile) async {
+    final currentUid = uid;
+    if (currentUid == null) return;
+
+    try {
+      final ref = _storage.ref(
+        'orphanages/$currentUid/gallery/${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
+      await ref.putFile(imageFile);
+      final imageUrl = await ref.getDownloadURL();
+
+      additionalImages.add(imageUrl);
+
+      await _firestore.collection('orphanage').doc(currentUid).update({
+        'additionalImages': additionalImages,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      _showSnack(context, 'Image added successfully');
+      notifyListeners();
+    } catch (e) {
+      _showSnack(context, 'Error adding image: $e');
+    }
+  }
+
+  Future<void> removeImage(BuildContext context, int index) async {
+    final currentUid = uid;
+    if (currentUid == null) return;
+
+    if (index >= 0 && index < additionalImages.length) {
+      try {
+        additionalImages.removeAt(index);
+
+        await _firestore.collection('orphanage').doc(currentUid).update({
+          'additionalImages': additionalImages,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        _showSnack(context, 'Image removed successfully');
+        notifyListeners();
+      } catch (e) {
+        _showSnack(context, 'Error removing image: $e');
+      }
+    }
+  }
+
   // ===== Orphanage data fetched from Firestore =====
-  // ===== Orphanage profile fields =====
   String? orphanagename;
   String? orphanageaddress;
   String? cnic;
@@ -204,9 +563,7 @@ class OrphanageViewModel extends ChangeNotifier {
         orphanageaddress = data['orphanageaddress'];
         cnic = data['cnic'];
         cnicImage = data['cnicImage'];
-
         orphanageImage = data['orphanageImage'];
-
         status = data['status'];
       }
     } catch (e) {
@@ -224,10 +581,15 @@ class OrphanageViewModel extends ChangeNotifier {
     phoneController.dispose();
     addressController.dispose();
     cnicController.dispose();
+    needsController.dispose();
+    storyTitleController.dispose();
+    storyDescriptionController.dispose();
+    eventTitleController.dispose();
+    eventDescriptionController.dispose();
+    eventDateController.dispose();
+    eventTimeController.dispose();
     super.dispose();
   }
-
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // ===== Existing fields =====
   List<Map<String, dynamic>> videoCallRequests = [];
@@ -235,7 +597,7 @@ class OrphanageViewModel extends ChangeNotifier {
 
   /// Fetch all video call requests from Firestore
   Future<void> fetchVideoCallRequests() async {
-    if (orphanagename == null) return; // Make sure we have orphanage name
+    if (orphanagename == null) return;
 
     isLoadingVideoCalls = true;
     notifyListeners();
@@ -243,11 +605,10 @@ class OrphanageViewModel extends ChangeNotifier {
     try {
       final snapshot = await _firestore.collection('videocallrequest').get();
 
-      // Filter and convert docs to Map<String, dynamic>
       videoCallRequests = snapshot.docs
           .map((doc) {
             final data = doc.data();
-            data['id'] = doc.id; // keep doc ID
+            data['id'] = doc.id;
             return data;
           })
           .where(
@@ -255,7 +616,7 @@ class OrphanageViewModel extends ChangeNotifier {
                 req['orphanageName'] != null &&
                 req['orphanageName'] == orphanagename &&
                 (req['status'] == null || req['status'] == 'Pending'),
-          ) // optional: only pending
+          )
           .toList();
     } catch (e) {
       print('Error fetching video call requests: $e');
@@ -270,12 +631,10 @@ class OrphanageViewModel extends ChangeNotifier {
     try {
       await _firestore.collection('videocallrequest').doc(requestId).update({
         'videocallstatus': 'accepted',
-      }); // update status
+      });
 
-      // Optional: show feedback
       _showSnack(context, 'Video call request accepted');
 
-      // Update local list to reflect change immediately
       videoCallRequests = videoCallRequests.map((req) {
         if (req['id'] == requestId) {
           req['videocallstatus'] = 'accepted';
@@ -294,12 +653,10 @@ class OrphanageViewModel extends ChangeNotifier {
     try {
       await _firestore.collection('videocallrequest').doc(requestId).update({
         'videocallstatus': 'rejected',
-      }); // update status
+      });
 
-      // Optional: show feedback
       _showSnack(context, 'Video call request rejected');
 
-      // Update local list to reflect change immediately
       videoCallRequests = videoCallRequests.map((req) {
         if (req['id'] == requestId) {
           req['videocallstatus'] = 'rejected';
@@ -310,6 +667,97 @@ class OrphanageViewModel extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _showSnack(context, 'Error rejecting request: $e');
+    }
+  }
+
+  // ===== Fetch ALL Orphanages (Admin / Donor Side) =====
+  List<Map<String, dynamic>> orphanageList = [];
+  bool isLoadingOrphanages = false;
+
+  Future<void> fetchAllOrphanages() async {
+    isLoadingOrphanages = true;
+    notifyListeners();
+
+    try {
+      final snapshot = await _firestore
+          .collection('orphanage')
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      orphanageList = snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['uid'] = doc.id;
+        return data;
+      }).toList();
+    } catch (e) {
+      print('Error fetching orphanages: $e');
+    }
+
+    isLoadingOrphanages = false;
+    notifyListeners();
+  }
+
+  // ===== Additional Orphanage fields =====
+  String email = '';
+  String phone = '';
+  String address = '';
+
+  // ===== Extra fields =====
+  List<String> needs = [];
+  List<String> additionalImages = [];
+  List<Map<String, dynamic>> stories = [];
+  List<Map<String, dynamic>> volunteeringEvents = [];
+  bool verified = false;
+  DateTime? createdAt;
+
+  /// Fetch all fields for the signed-in orphanage
+  Future<void> fetchMyProfile() async {
+    final currentUid = uid;
+    if (currentUid == null) return;
+
+    try {
+      final data = await OrphanageFirebaseService.fetchOrphanageProfile(
+        uid: currentUid,
+      );
+
+      if (data != null) {
+        // Basic info
+        orphanagename = data['orphanagename'] ?? '';
+        email = data['email'] ?? '';
+        phone = data['phone'] ?? '';
+        orphanageaddress = data['orphanageaddress'] ?? '';
+        status = data['status'] ?? '';
+        cnic = data['cnic'] ?? '';
+
+        // Images
+        cnicImage = data['cnicImage'];
+        signboardImage = data['signBoardImage'];
+        orphanageImage = data['orphanageImage'];
+
+        // Location
+        latitude = (data['latitude'] != null)
+            ? (data['latitude'] as num).toDouble()
+            : null;
+        longitude = (data['longitude'] != null)
+            ? (data['longitude'] as num).toDouble()
+            : null;
+
+        // Additional fields
+        needs = List<String>.from(data['needs'] ?? []);
+        additionalImages = List<String>.from(data['additionalImages'] ?? []);
+        stories = List<Map<String, dynamic>>.from(data['stories'] ?? []);
+        volunteeringEvents = List<Map<String, dynamic>>.from(
+          data['volunteeringEvents'] ?? [],
+        );
+        verified = data['verified'] ?? false;
+        createdAt = data['createdAt'] != null
+            ? (data['createdAt'] as Timestamp).toDate()
+            : null;
+
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error fetching orphanage profile: $e');
     }
   }
 }
