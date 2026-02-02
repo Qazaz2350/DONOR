@@ -1,7 +1,7 @@
 import 'package:donate/Utilis/nav.dart';
-import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_home/orphanage_home_view.dart';
-import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanagecallreeq/orphanage_callreq_view.dart';
-import 'package:donate/VIEW/SCREENS/OPHANAGE/profile/orphanageProfileView.dart';
+import 'package:donate/VIEW/SCREENS/OPHANAGE/TABBAR/orphanage_home_view.dart';
+import 'package:donate/VIEW/SCREENS/OPHANAGE/TABBAR/orphanage_call_request_view.dart';
+import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanageProfileView.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:donate/VIEWMODEL/SCREENS/ORPHANAGE/orphanage_view_model.dart';
@@ -83,10 +83,10 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
                 // Tab 1: Home
                 OrphanageHomeView(),
                 // Tab 2: Call Requests
-                Text("data"),
+                CallRequestView(),
 
                 // Tab 3: Create Request
-                OrphanageRequestView(),
+                Text("create"),
               ],
             ),
             bottomNavigationBar: Material(

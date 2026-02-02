@@ -1,4 +1,4 @@
-import 'package:donate/VIEW/SCREENS/OPHANAGE/profile/orphanageProfileView.dart';
+import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanageProfileView.dart';
 import 'package:donate/VIEW/login/signin_view.dart';
 import 'package:donate/VIEWMODEL/SCREENS/ORPHANAGE/Orphanage_View_Model.dart';
 import 'package:firebase_core/firebase_core.dart';

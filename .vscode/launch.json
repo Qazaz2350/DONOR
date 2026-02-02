@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "name": "donate (Flutter 23021RAAEG)",
+            "program": "lib/main.dart",
+            "deviceId": "da69884c",
+            "request": "launch",
+            "type": "dart"
+        }
+    ]
+}

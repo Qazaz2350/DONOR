@@ -23,8 +23,7 @@ class DonorStatsView extends StatelessWidget {
                   child: _buildStatCard(
                     context: context,
                     title: 'Total Donations',
-                    mainValue: vm.formattedTotalDonations,
-                    subValue: vm.donationCountText,
+
                     image: Image.asset(
                       'assets/icons/donate.png', // <-- correct path
                       width: 24.w,
@@ -47,8 +46,7 @@ class DonorStatsView extends StatelessWidget {
                   child: _buildStatCard(
                     context: context,
                     title: 'Children Sponsored',
-                    mainValue: '${vm.childrenSponsored}',
-                    subValue: vm.childrenSponsoredText,
+
                     image: Image.asset(
                       'assets/icons/kid.png',
                       width: 24.w,
@@ -76,8 +74,7 @@ class DonorStatsView extends StatelessWidget {
   Widget _buildStatCard({
     required BuildContext context,
     required String title,
-    required String mainValue,
-    required String subValue,
+
     required Widget image, // changed from Image to Widget for flexibility
     required Gradient gradient,
   }) {
@@ -114,26 +111,7 @@ class DonorStatsView extends StatelessWidget {
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    mainValue,
-                    style: TextStyle(
-                      fontSize: FontSizes.f16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.white,
-                      height: 1.2,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    subValue,
-                    style: TextStyle(
-                      fontSize: FontSizes.f12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.white.withOpacity(0.8),
-                    ),
-                  ),
-                ],
+                children: [],
               ),
               Container(
                 padding: EdgeInsets.all(10.w),

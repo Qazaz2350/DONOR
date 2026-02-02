@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donate/Utilis/nav.dart';
 import 'package:donate/VIEW/SCREENS/ADMIN/admin_dashboard.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/donor_tabbar_view.dart';
-import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_Form_view.dart';
+import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_adminForm_view.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_dashboard_view.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_rejection_view.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanage_waiting_view.dart';
@@ -174,6 +174,7 @@ class AuthViewModel extends ChangeNotifier {
             username: donorname ?? "null",
             useremail: donoremail ?? "null",
             userphone: donorphone ?? "null",
+            uid: uid,
           ),
         );
         return;

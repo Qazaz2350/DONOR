@@ -55,7 +55,10 @@ dependencies:
   table_calendar:
   # zego_uikit_prebuilt_call: ^4.22.2
   confetti:
+  # zego_uikit_prebuilt_call: ^4.14.3
+  # zego_uikit_prebuilt_call:
   # ImageFilter:
+  zego_uikit_prebuilt_call:
   
 
 dev_dependencies:

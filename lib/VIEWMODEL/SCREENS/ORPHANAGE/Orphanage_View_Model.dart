@@ -627,17 +627,20 @@ class OrphanageViewModel extends ChangeNotifier {
   }
 
   /// ===== Accept a video call request =====
-  Future<void> acceptVideoCall(String requestId, BuildContext context) async {
+  Future<void> acceptVideoCallrequest(
+    String requestId,
+    BuildContext context,
+  ) async {
     try {
       await _firestore.collection('videocallrequest').doc(requestId).update({
-        'videocallstatus': 'accepted',
+        'videocallstatus': 'RequestAccepted',
       });
 
       _showSnack(context, 'Video call request accepted');
 
       videoCallRequests = videoCallRequests.map((req) {
         if (req['id'] == requestId) {
-          req['videocallstatus'] = 'accepted';
+          req['videocallstatus'] = 'RequestAccepted';
         }
         return req;
       }).toList();
@@ -649,17 +652,20 @@ class OrphanageViewModel extends ChangeNotifier {
   }
 
   /// ===== Reject a video call request =====
-  Future<void> rejectVideoCall(String requestId, BuildContext context) async {
+  Future<void> rejectVideoCallrequest(
+    String requestId,
+    BuildContext context,
+  ) async {
     try {
       await _firestore.collection('videocallrequest').doc(requestId).update({
-        'videocallstatus': 'rejected',
+        'videocallstatus': 'RequestRejected',
       });
 
       _showSnack(context, 'Video call request rejected');
 
       videoCallRequests = videoCallRequests.map((req) {
         if (req['id'] == requestId) {
-          req['videocallstatus'] = 'rejected';
+          req['videocallstatus'] = 'RequestRejected';
         }
         return req;
       }).toList();

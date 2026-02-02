@@ -2,7 +2,7 @@ import 'package:donate/UTILIS/app_colors.dart';
 import 'package:donate/Utilis/app_fonts.dart';
 import 'package:donate/Utilis/extention.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/HOME/Home_view.dart';
-import 'package:donate/VIEW/SCREENS/DONOR/VIDEOCALL/videocall_history_view.dart';
+import 'package:donate/VIEW/SCREENS/DONOR/VIDEOCALL/donor_videocall_history_view.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/donation/donation_history_view.dart';
 import 'package:donate/VIEWMODEL/SCREENS/SENDER/donor_viewmodel.dart';
 import 'package:flutter/material.dart';
@@ -13,12 +13,14 @@ class DonorTabBarView extends StatefulWidget {
   final String username;
   final String useremail;
   final String userphone;
+  final String uid;
 
   const DonorTabBarView({
     Key? key,
     required this.username,
     required this.useremail,
     required this.userphone,
+    required this.uid,
   }) : super(key: key);
 
   @override
@@ -73,13 +75,7 @@ class _DonorTabBarViewState extends State<DonorTabBarView>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          vm.getGreeting(),
-                          style: TextStyle(
-                            fontSize: FontSizes.f12,
-                            color: AppColors.white,
-                          ),
-                        ),
+                      
                         Text(
                           widget.username,
                           style: TextStyle(
@@ -131,7 +127,7 @@ class _DonorTabBarViewState extends State<DonorTabBarView>
                         userphone: widget.userphone,
                       ),
                       DonationHistoryView(),
-                      VideoCallRequestsUI(),
+                      VideoCallRequestsUI(uid: widget.uid),
                       Center(
                         child: Text(
                           'Story Feed Screen',

@@ -6,7 +6,9 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 class VideoCallRequestsUI extends StatelessWidget {
-  const VideoCallRequestsUI({super.key});
+  final String uid;
+
+  const VideoCallRequestsUI({super.key, required this.uid});
 
   @override
   Widget build(BuildContext context) {
@@ -143,10 +145,17 @@ class VideoCallRequestsUI extends StatelessWidget {
                               if (status == 'pending')
                                 Row(children: [const SizedBox(width: 8)])
                               else if (status == 'accepted')
+                                // In your VideoCallRequestsUI, update the ElevatedButton:
                                 ElevatedButton.icon(
                                   onPressed: () {
-                                    print(
-                                      'Start video call with ${item['orphanageName']}',
+                                    // Use ViewModel method
+                                    final donorVM = Provider.of<DonorViewModel>(
+                                      context,
+                                      listen: false,
+                                    );
+                                    donorVM.startVideoCall(
+                                      context: context,
+                                      requestData: item,
                                     );
                                   },
                                   icon: const Icon(Icons.video_call),
@@ -154,7 +163,6 @@ class VideoCallRequestsUI extends StatelessWidget {
                                     'Start Video Call',
                                     style: TextStyle(color: AppColors.white),
                                   ),
-
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.blue,
                                   ),
