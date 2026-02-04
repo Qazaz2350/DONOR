@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:donate/MODELS/SCREENS/DONOR/MYDONATION_model.dart';
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
 class DonorViewModel extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -269,18 +270,33 @@ class DonorViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final snapshot = await _firestore
-          .collection('videocallrequest')
-          .orderBy('requestTime', descending: true)
-          .get();
+      final user = _auth.currentUser;
+      if (user == null) return;
+
+      QuerySnapshot snapshot;
+
+      try {
+        // Try with ordering first
+        snapshot = await _firestore
+            .collection('videocallrequest')
+            .where('donorID', isEqualTo: user.uid)
+            .orderBy('requestTime', descending: true)
+            .get();
+      } catch (e) {
+        // If fails, try without ordering
+        snapshot = await _firestore
+            .collection('videocallrequest')
+            .where('donorID', isEqualTo: user.uid)
+            .get();
+      }
 
       videoCallRequests = snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
-        return data;
+        final data = doc.data() as Map<String, dynamic>;
+        return {'id': doc.id, ...data};
       }).toList();
     } catch (e) {
-      debugPrint('Error fetching video call requests: $e');
+      debugPrint('Fetch error: $e');
+      videoCallRequests = [];
     }
 
     isFetchingVideoCalls = false;
@@ -342,18 +358,23 @@ class DonorViewModel extends ChangeNotifier {
         'status': 'active',
         'requestId': requestData['id'],
       });
+      print("✅ Active call created with ID: $orphanageId, $orphanageName");
 
       if (context.mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CallPage(
-              callID: callID,
-              userID: currentUser.uid,
-              userName: donorName,
-            ),
-          ),
+        ZegoUIKitPrebuiltCallInvitationService().send(
+          invitees: [ZegoCallUser(orphanageId, orphanageName)],
+          isVideoCall: false,
         );
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => CallPage(
+        //       callID: callID,
+        //       userID: currentUser.uid,
+        //       userName: donorName,
+        //     ),
+        //   ),
+        // );
       }
     } catch (e) {
       debugPrint('Error starting video call: $e');

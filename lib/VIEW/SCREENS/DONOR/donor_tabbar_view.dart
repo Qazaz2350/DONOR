@@ -5,9 +5,12 @@ import 'package:donate/VIEW/SCREENS/DONOR/HOME/Home_view.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/VIDEOCALL/donor_videocall_history_view.dart';
 import 'package:donate/VIEW/SCREENS/DONOR/donation/donation_history_view.dart';
 import 'package:donate/VIEWMODEL/SCREENS/SENDER/donor_viewmodel.dart';
+import 'package:donate/VIEWMODEL/auth/authentication.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
+import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 
 class DonorTabBarView extends StatefulWidget {
   final String username;
@@ -34,6 +37,14 @@ class _DonorTabBarViewState extends State<DonorTabBarView>
   @override
   void initState() {
     super.initState();
+    ZegoUIKitPrebuiltCallInvitationService().init(
+      appID: 1666014796,
+      appSign:
+          "dde62f5bc7593bfcba9fb7b3059e8b1c075838d979e53ba89ef169112fdce4ce",
+      userID: widget.uid,
+      userName: widget.username,
+      plugins: [ZegoUIKitSignalingPlugin()],
+    );
     _tabController = TabController(length: 4, vsync: this);
   }
 
@@ -75,7 +86,6 @@ class _DonorTabBarViewState extends State<DonorTabBarView>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                      
                         Text(
                           widget.username,
                           style: TextStyle(
@@ -127,15 +137,14 @@ class _DonorTabBarViewState extends State<DonorTabBarView>
                         userphone: widget.userphone,
                       ),
                       DonationHistoryView(),
-                      VideoCallRequestsUI(uid: widget.uid),
+                      VideoCallRequestsUI(),
                       Center(
-                        child: Text(
-                          'Story Feed Screen',
-                          style: TextStyle(
-                            fontSize: FontSizes.f16,
-                            fontWeight: FontWeight.bold,
-                            color: context.colors.onSurface,
-                          ),
+                        child: ElevatedButton(
+                          onPressed: () => Provider.of<AuthViewModel>(
+                            context,
+                            listen: false,
+                          ).logout(context),
+                          child: Text('Logout'),
                         ),
                       ),
                     ],

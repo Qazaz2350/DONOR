@@ -2,6 +2,7 @@ import 'package:donate/Utilis/nav.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/TABBAR/orphanage_home_view.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/TABBAR/orphanage_call_request_view.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanageProfileView.dart';
+import 'package:donate/VIEWMODEL/auth/authentication.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:donate/VIEWMODEL/SCREENS/ORPHANAGE/orphanage_view_model.dart';
@@ -86,7 +87,15 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
                 CallRequestView(),
 
                 // Tab 3: Create Request
-                Text("create"),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () => Provider.of<AuthViewModel>(
+                      context,
+                      listen: false,
+                    ).logout(context),
+                    child: Text('Logout'),
+                  ),
+                ),
               ],
             ),
             bottomNavigationBar: Material(
@@ -99,7 +108,7 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
                 tabs: const [
                   Tab(icon: Icon(Icons.home), text: 'Home'),
                   Tab(icon: Icon(Icons.video_call), text: 'Call Requests'),
-                  Tab(icon: Icon(Icons.add_box), text: 'Create'),
+                  Tab(icon: Icon(Icons.add_box), text: 'logout'),
                   // Tab(icon: Icon(Icons.person), text: 'Profile'),
                 ],
               ),

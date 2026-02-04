@@ -490,51 +490,51 @@ class OrphanageViewModel extends ChangeNotifier {
   // For Additional Images editing
   bool isAddingImages = false;
 
-  Future<void> addImage(BuildContext context, File imageFile) async {
-    final currentUid = uid;
-    if (currentUid == null) return;
+  // Future<void> addImage(BuildContext context, File imageFile) async {
+  //   final currentUid = uid;
+  //   if (currentUid == null) return;
 
-    try {
-      final ref = _storage.ref(
-        'orphanages/$currentUid/gallery/${DateTime.now().millisecondsSinceEpoch}.jpg',
-      );
-      await ref.putFile(imageFile);
-      final imageUrl = await ref.getDownloadURL();
+  //   try {
+  //     final ref = _storage.ref(
+  //       'orphanages/$currentUid/gallery/${DateTime.now().millisecondsSinceEpoch}.jpg',
+  //     );
+  //     await ref.putFile(imageFile);
+  //     final imageUrl = await ref.getDownloadURL();
 
-      additionalImages.add(imageUrl);
+  //     additionalImages.add(imageUrl);
 
-      await _firestore.collection('orphanage').doc(currentUid).update({
-        'additionalImages': additionalImages,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+  //     await _firestore.collection('orphanage').doc(currentUid).update({
+  //       'additionalImages': additionalImages,
+  //       'updatedAt': FieldValue.serverTimestamp(),
+  //     });
 
-      _showSnack(context, 'Image added successfully');
-      notifyListeners();
-    } catch (e) {
-      _showSnack(context, 'Error adding image: $e');
-    }
-  }
+  //     _showSnack(context, 'Image added successfully');
+  //     notifyListeners();
+  //   } catch (e) {
+  //     _showSnack(context, 'Error adding image: $e');
+  //   }
+  // }
 
-  Future<void> removeImage(BuildContext context, int index) async {
-    final currentUid = uid;
-    if (currentUid == null) return;
+  // Future<void> removeImage(BuildContext context, int index) async {
+  //   final currentUid = uid;
+  //   if (currentUid == null) return;
 
-    if (index >= 0 && index < additionalImages.length) {
-      try {
-        additionalImages.removeAt(index);
+  //   if (index >= 0 && index < additionalImages.length) {
+  //     try {
+  //       additionalImages.removeAt(index);
 
-        await _firestore.collection('orphanage').doc(currentUid).update({
-          'additionalImages': additionalImages,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+  //       await _firestore.collection('orphanage').doc(currentUid).update({
+  //         'additionalImages': additionalImages,
+  //         'updatedAt': FieldValue.serverTimestamp(),
+  //       });
 
-        _showSnack(context, 'Image removed successfully');
-        notifyListeners();
-      } catch (e) {
-        _showSnack(context, 'Error removing image: $e');
-      }
-    }
-  }
+  //       _showSnack(context, 'Image removed successfully');
+  //       notifyListeners();
+  //     } catch (e) {
+  //       _showSnack(context, 'Error removing image: $e');
+  //     }
+  //   }
+  // }
 
   // ===== Orphanage data fetched from Firestore =====
   String? orphanagename;

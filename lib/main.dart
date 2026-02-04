@@ -1,9 +1,9 @@
-import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanageProfileView.dart';
-import 'package:donate/VIEW/login/signin_view.dart';
+import 'package:donate/COMMOM/splash_screen.dart';
 import 'package:donate/VIEWMODEL/SCREENS/ORPHANAGE/Orphanage_View_Model.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:donate/VIEWMODEL/SCREENS/SENDER/donor_viewmodel.dart';
+import 'package:donate/VIEWMODEL/auth/authentication.dart';
 import 'package:donate/theme.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,6 +14,7 @@ void main() async {
 
   // Initialize Firebase
   await Firebase.initializeApp();
+
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => DonorViewModel()),
         ChangeNotifierProvider(create: (_) => OrphanageViewModel()),
       ],
@@ -46,10 +48,17 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: ThemeMode.system,
-            home: const SignInScreenView(), // unified signup screen
+            home: const SplashScreen(),
           );
         },
       ),
     );
   }
+}
+
+// Optional: Zego Cloud Config class for consistency
+class ZegoCloudConfig {
+  static const appId = 1666014796;
+  static const appSign =
+      "dde62f5bc7593bfcba9fb7b3059e8b1c075838d979e53ba89ef169112fdce4ce";
 }

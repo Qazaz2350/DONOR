@@ -53,6 +53,7 @@ class _HomeViewState extends State<HomeView>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text("logout"),
                   // ------------------ Search Bar ------------------
                   Container(
                     padding: EdgeInsets.only(

@@ -122,16 +122,16 @@ class Orphanageprofileview extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Gallery Section
-                  _buildEditableSection(
-                    title: 'Photo Gallery',
-                    items: additionalImages,
-                    onEdit: null,
-                    onAdd: () => _pickImage(context, vm),
-                    itemBuilder: (item, index) => _imageThumbnail(
-                      item,
-                      () => vm.removeImage(context, index),
-                    ),
-                  ),
+                  // _buildEditableSection(
+                  //   title: 'Photo Gallery',
+                  //   items: additionalImages,
+                  //   onEdit: null,
+                  //   onAdd: () => _pickImage(context, vm),
+                  //   itemBuilder: (item, index) => _imageThumbnail(
+                  //     item,
+                  //     () => vm.removeImage(context, index),
+                  //   ),
+                  // ),
 
                   const SizedBox(height: 40),
                 ],
