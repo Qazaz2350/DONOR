@@ -21,9 +21,9 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   // Zego Cloud configuration constants
-  static const zegoAppId = 1253586825;
+  static const zegoAppId = 1666014796;
   static const zegoAppSign =
-      "08be57d145c3855da96f0643f13ad0aa8ead83ad7fb51a51c18eb1777bfa54b6";
+      "dde62f5bc7593bfcba9fb7b3059e8b1c075838d979e53ba89ef169112fdce4ce";
 
   // Store current Zego user ID locally to track changes
   String _currentZegoUserId = "";
