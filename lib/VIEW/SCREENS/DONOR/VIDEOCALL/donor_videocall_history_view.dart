@@ -51,10 +51,10 @@ class _VideoCallRequestsUIState extends State<VideoCallRequestsUI> {
               itemBuilder: (context, index) {
                 final item = vm.videoCallRequests[index];
 
-                final requestTime = (item['requestTime'] as Timestamp?)
-                    ?.toDate();
-                final scheduledTime = (item['scheduledTime'] as Timestamp?)
-                    ?.toDate();
+                final requestTime =
+                    (item['requestTime'] as Timestamp?)?.toDate();
+                final scheduledTime =
+                    (item['scheduledTime'] as Timestamp?)?.toDate();
                 final statusRaw = item['videocallstatus'] ?? 'pending';
                 final status = statusRaw.toLowerCase();
 

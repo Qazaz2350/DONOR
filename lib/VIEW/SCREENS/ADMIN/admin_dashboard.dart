@@ -151,20 +151,15 @@ class AdminOrphanagePage extends StatelessWidget {
                                         ],
                                       ),
                                       const SizedBox(height: 10),
-
                                       Text('Email: ${data['email'] ?? ''}'),
                                       Text('Phone: ${data['phone'] ?? ''}'),
                                       Text('Address: ${data['address'] ?? ''}'),
                                       Text('CNIC: ${data['cnic'] ?? ''}'),
-
                                       const SizedBox(height: 6),
-
                                       Text(
                                         'Profile: ${(data['profile'] as List?)?.join(', ') ?? 'N/A'}',
                                       ),
-
                                       const SizedBox(height: 12),
-
                                       Row(
                                         children: [
                                           Expanded(
@@ -243,9 +238,8 @@ class AdminOrphanagePage extends StatelessWidget {
                                   width: 16,
                                   height: 16,
                                   decoration: BoxDecoration(
-                                    color: isApproved
-                                        ? Colors.green
-                                        : Colors.red,
+                                    color:
+                                        isApproved ? Colors.green : Colors.red,
                                     shape: BoxShape.circle,
                                   ),
                                 ),

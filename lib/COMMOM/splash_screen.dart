@@ -84,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen> {
         appID: zegoAppId,
         appSign: zegoAppSign,
         userID: userId,
-        userName: "user_assan",
+        userName: "user_$userName",
         plugins: [ZegoUIKitSignalingPlugin()],
       );
     } catch (e) {

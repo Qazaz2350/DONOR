@@ -31,10 +31,8 @@ class DonorViewModel extends ChangeNotifier {
         return;
       }
 
-      final docSnapshot = await _firestore
-          .collection('donations')
-          .doc(user.uid)
-          .get();
+      final docSnapshot =
+          await _firestore.collection('donations').doc(user.uid).get();
 
       if (docSnapshot.exists) {
         final data = docSnapshot.data()!;
@@ -320,22 +318,18 @@ class DonorViewModel extends ChangeNotifier {
         return;
       }
 
-      final donorDoc = await _firestore
-          .collection('donor')
-          .doc(currentUser.uid)
-          .get();
+      final donorDoc =
+          await _firestore.collection('donor').doc(currentUser.uid).get();
 
       final donorData = donorDoc.data() ?? {};
-      final donorName =
-          donorData['fullName'] ??
+      final donorName = donorData['fullName'] ??
           currentUser.displayName ??
           currentUser.email?.split('@').first ??
           'Donor';
 
       final orphanageName = requestData['orphanageName'] ?? 'Orphanage';
       final orphanageId = requestData['orphanageID'];
-      final callID =
-          requestData['callID'] ??
+      final callID = requestData['callID'] ??
           'call_${currentUser.uid}_${orphanageId}_${DateTime.now().millisecondsSinceEpoch}';
 
       if (requestData['id'] != null) {
@@ -343,9 +337,9 @@ class DonorViewModel extends ChangeNotifier {
             .collection('videocallrequest')
             .doc(requestData['id'])
             .update({
-              'videocallstatus': 'active',
-              'actualCallStartTime': FieldValue.serverTimestamp(),
-            });
+          'videocallstatus': 'active',
+          'actualCallStartTime': FieldValue.serverTimestamp(),
+        });
       }
 
       await _firestore.collection('active_calls').doc(callID).set({
@@ -360,22 +354,24 @@ class DonorViewModel extends ChangeNotifier {
       });
       print("✅ Active call created with ID: $orphanageId, $orphanageName");
 
-      if (context.mounted) {
-        ZegoUIKitPrebuiltCallInvitationService().send(
-          invitees: [ZegoCallUser(orphanageId, orphanageName)],
-          isVideoCall: false,
-        );
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (context) => CallPage(
-        //       callID: callID,
-        //       userID: currentUser.uid,
-        //       userName: donorName,
-        //     ),
-        //   ),
-        // );
-      }
+      // if (context.mounted) {
+      print("📞 Initiating call to $orphanageId");
+      print("📞 Initiating call to $orphanageName");
+      ZegoUIKitPrebuiltCallInvitationService().send(
+        invitees: [ZegoCallUser(orphanageId, orphanageName)],
+        isVideoCall: false,
+      );
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => CallPage(
+      //       callID: callID,
+      //       userID: currentUser.uid,
+      //       userName: donorName,
+      //     ),
+      //   ),
+      // );
+      // }
     } catch (e) {
       debugPrint('Error starting video call: $e');
       if (context.mounted) {
@@ -406,10 +402,8 @@ class DonorViewModel extends ChangeNotifier {
         'endTime': DateTime.now(),
       });
 
-      final callDoc = await _firestore
-          .collection('active_calls')
-          .doc(callID)
-          .get();
+      final callDoc =
+          await _firestore.collection('active_calls').doc(callID).get();
       final requestId = callDoc.data()?['requestId'];
 
       if (requestId != null) {
