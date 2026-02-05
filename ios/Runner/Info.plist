@@ -49,8 +49,9 @@
 		<string>We need access to your photo library to upload images.</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>This app needs access to location when open.</string>
-		<key>NSCameraUsageDescription</key>
-		<string>We need access to your camera for video calls and take pictures.</string>
+     	<key>NSCameraUsageDescription</key>
+        <string>Scan your card to add it automatically</string>
+
 		<key>NSMicrophoneUsageDescription</key>
 		<string>We need access to your microphone for video calls.</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

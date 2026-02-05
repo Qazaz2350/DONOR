@@ -1,5 +1,6 @@
 package com.example.donate
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity  // FIXED IMPORT!
 
-class MainActivity : FlutterActivity()
+class MainActivity: FlutterFragmentActivity() {  // CORRECT NOW!
+}
