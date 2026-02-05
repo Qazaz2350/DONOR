@@ -1,6 +1,7 @@
 import 'package:donate/Utilis/nav.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/TABBAR/orphanage_home_view.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/TABBAR/orphanage_call_request_view.dart';
+import 'package:donate/VIEW/SCREENS/OPHANAGE/TABBAR/orphanage_sponserchid_view.dart';
 import 'package:donate/VIEW/SCREENS/OPHANAGE/orphanageProfileView.dart';
 import 'package:donate/VIEWMODEL/auth/authentication.dart';
 import 'package:flutter/material.dart';
@@ -29,18 +30,18 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
   late TabController _tabController;
 
   // Option 2: All 4 titles
-  final List<String> _titles = [
-    'Home Dashboard',
-    'Call Requests',
-    'Create Request',
-    // 'Profile',
-  ];
+  // final List<String> _titles = [
+  //   'Home Dashboard',
+  //   'Call Requests',
+  //   'Create Request',
+  //   // 'Profile',
+  // ];
 
   @override
   void initState() {
     super.initState();
     // Length should match tabs count (4)
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() => setState(() {}));
   }
 
@@ -53,14 +54,9 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
           return Scaffold(
             // drawer: _buildDrawer(vm),
             appBar: AppBar(
+              title: const Text('Orphanage Dashboard'),
               centerTitle: true, // Center the title
-              title: Text(
-                _titles[_tabController.index],
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+
               leadingWidth: 70, // Increase width to fit avatar nicely
               leading: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -85,6 +81,8 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
                 OrphanageHomeView(),
                 // Tab 2: Call Requests
                 CallRequestView(),
+                // Tab 3: Create Request
+                OrphanageSponserchidView(),
 
                 // Tab 3: Create Request
                 Center(
@@ -109,7 +107,7 @@ class _OrphanageDashboardViewState extends State<OrphanageDashboardView>
                   Tab(icon: Icon(Icons.home), text: 'Home'),
                   Tab(icon: Icon(Icons.video_call), text: 'Call Requests'),
                   Tab(icon: Icon(Icons.add_box), text: 'logout'),
-                  // Tab(icon: Icon(Icons.person), text: 'Profile'),
+                  Tab(icon: Icon(Icons.person), text: 'sponser Child'),
                 ],
               ),
             ),

@@ -359,7 +359,7 @@ class DonorViewModel extends ChangeNotifier {
       print("📞 Initiating call to $orphanageName");
       ZegoUIKitPrebuiltCallInvitationService().send(
         invitees: [ZegoCallUser(orphanageId, orphanageName)],
-        isVideoCall: false,
+        isVideoCall: true,
       );
       // Navigator.push(
       //   context,
